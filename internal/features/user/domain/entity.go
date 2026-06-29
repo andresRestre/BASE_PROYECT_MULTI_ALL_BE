@@ -14,14 +14,16 @@ type User struct {
 	Password  string                   `gorm:"type:varchar(255);not null" json:"-"`
 	FirstName string                   `gorm:"type:varchar(100)" json:"first_name"`
 	LastName  string                   `gorm:"type:varchar(100)" json:"last_name"`
-	IsActive  bool                     `gorm:"default:true" json:"is_active"`
-	CreateBy  *uint                    `json:"create_by"`
-	CreateAt  time.Time                `gorm:"autoCreateTime" json:"create_at"`
-	UpdateBy  *uint                    `json:"update_by"`
-	UpdateAt  time.Time                `gorm:"autoUpdateTime" json:"update_at"`
-	RoleID    *uint                    `json:"role_id"`
-	Role      *roleDomain.Role         `gorm:"foreignKey:RoleID" json:"role,omitempty"`
-	Companies []companyDomain.Company `gorm:"many2many:administrative.user_companies;" json:"companies,omitempty"`
+	IsActive     bool                     `gorm:"default:true" json:"is_active"`
+	CreateBy     *uint                    `json:"create_by"`
+	CreateAt     time.Time                `gorm:"autoCreateTime" json:"create_at"`
+	UpdateBy     *uint                    `json:"update_by"`
+	UpdateAt     time.Time                `gorm:"autoUpdateTime" json:"update_at"`
+	CreateByName string                   `gorm:"-" json:"create_by_name"`
+	UpdateByName string                   `gorm:"-" json:"update_by_name"`
+	RoleID       *uint                    `json:"role_id"`
+	Role         *roleDomain.Role         `gorm:"foreignKey:RoleID" json:"role,omitempty"`
+	Companies    []companyDomain.Company `gorm:"many2many:administrative.user_companies;" json:"companies,omitempty"`
 }
 
 // TableName overrides the default GORM table name mapping to place the table inside the administrative schema.
@@ -55,18 +57,20 @@ type UpdateUserRequest struct {
 
 // UserResponse is the public representation of a user (no password).
 type UserResponse struct {
-	ID        uint                     `json:"id"`
-	Email     string                   `json:"email"`
-	FirstName string                   `json:"first_name"`
-	LastName  string                   `json:"last_name"`
-	IsActive  bool                     `json:"is_active"`
-	CreateBy  *uint                    `json:"create_by"`
-	CreateAt  time.Time                `json:"create_at"`
-	UpdateBy  *uint                    `json:"update_by"`
-	UpdateAt  time.Time                `json:"update_at"`
-	RoleID    *uint                    `json:"role_id"`
-	RoleCode  string                   `json:"role_code"`
-	Companies []companyDomain.Company `json:"companies,omitempty"`
+	ID           uint                     `json:"id"`
+	Email        string                   `json:"email"`
+	FirstName    string                   `json:"first_name"`
+	LastName     string                   `json:"last_name"`
+	IsActive     bool                     `json:"is_active"`
+	CreateBy     *uint                    `json:"create_by"`
+	CreateAt     time.Time                `json:"create_at"`
+	UpdateBy     *uint                    `json:"update_by"`
+	UpdateAt     time.Time                `json:"update_at"`
+	CreateByName string                   `json:"create_by_name"`
+	UpdateByName string                   `json:"update_by_name"`
+	RoleID       *uint                    `json:"role_id"`
+	RoleCode     string                   `json:"role_code"`
+	Companies    []companyDomain.Company `json:"companies,omitempty"`
 }
 
 // ToUserResponse converts a User entity to a UserResponse DTO.
@@ -76,18 +80,20 @@ func ToUserResponse(u *User) *UserResponse {
 		roleCode = u.Role.Code
 	}
 	return &UserResponse{
-		ID:        u.ID,
-		Email:     u.Email,
-		FirstName: u.FirstName,
-		LastName:  u.LastName,
-		IsActive:  u.IsActive,
-		CreateBy:  u.CreateBy,
-		CreateAt:  u.CreateAt,
-		UpdateBy:  u.UpdateBy,
-		UpdateAt:  u.UpdateAt,
-		RoleID:    u.RoleID,
-		RoleCode:  roleCode,
-		Companies: u.Companies,
+		ID:           u.ID,
+		Email:        u.Email,
+		FirstName:    u.FirstName,
+		LastName:     u.LastName,
+		IsActive:     u.IsActive,
+		CreateBy:     u.CreateBy,
+		CreateAt:     u.CreateAt,
+		UpdateBy:     u.UpdateBy,
+		UpdateAt:     u.UpdateAt,
+		CreateByName: u.CreateByName,
+		UpdateByName: u.UpdateByName,
+		RoleID:       u.RoleID,
+		RoleCode:     roleCode,
+		Companies:    u.Companies,
 	}
 }
 

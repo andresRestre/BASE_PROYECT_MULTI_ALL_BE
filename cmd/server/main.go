@@ -21,6 +21,8 @@ import (
 	userDomain "multicliente-backend/internal/features/user/domain"
 	"multicliente-backend/internal/platform/config"
 	"multicliente-backend/internal/platform/database"
+	"multicliente-backend/internal/platform/database/migrations"
+	"multicliente-backend/internal/platform/database/seeds"
 	"multicliente-backend/internal/platform/middleware"
 	"multicliente-backend/internal/platform/server"
 )
@@ -41,7 +43,7 @@ func main() {
 	_ = db.Exec("ALTER TABLE administrative.users DROP COLUMN IF EXISTS create_by")
 	_ = db.Exec("ALTER TABLE administrative.users DROP COLUMN IF EXISTS update_by")
 
-	err = database.Migrate(db,
+	err = migrations.Migrate(db,
 		&companyDomain.Company{},
 		&categoryDomain.Category{},
 		&articleDomain.Article{},
@@ -57,7 +59,7 @@ func main() {
 	log.Println("✅ Database migrations completed")
 
 	// Seed database default values
-	database.SeedDatabase(db)
+	seeds.Seed(db)
 
 	// Setup Gin router
 	router := server.NewRouter()

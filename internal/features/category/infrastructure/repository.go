@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"gorm.io/gorm"
 	"multicliente-backend/internal/features/category/domain"
+	"multicliente-backend/internal/platform/database"
 )
 
 type categoryRepository struct {
@@ -11,6 +12,30 @@ type categoryRepository struct {
 
 func NewCategoryRepository(db *gorm.DB) domain.CategoryRepository {
 	return &categoryRepository{db: db}
+}
+
+func (r *categoryRepository) populateAudits(categories []*domain.Category) {
+	var userIDs []uint
+	for _, c := range categories {
+		if c.CreateBy != nil {
+			userIDs = append(userIDs, *c.CreateBy)
+		}
+		if c.UpdateBy != nil {
+			userIDs = append(userIDs, *c.UpdateBy)
+		}
+	}
+	namesMap, err := database.GetUserNamesMap(r.db, userIDs)
+	if err != nil {
+		return
+	}
+	for _, c := range categories {
+		if c.CreateBy != nil {
+			c.CreateByName = namesMap[*c.CreateBy]
+		}
+		if c.UpdateBy != nil {
+			c.UpdateByName = namesMap[*c.UpdateBy]
+		}
+	}
 }
 
 func (r *categoryRepository) Create(cat *domain.Category) error {
@@ -22,6 +47,7 @@ func (r *categoryRepository) FindByID(id uint) (*domain.Category, error) {
 	if err := r.db.First(&cat, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
+	r.populateAudits([]*domain.Category{&cat})
 	return &cat, nil
 }
 
@@ -30,6 +56,11 @@ func (r *categoryRepository) FindAllByCompany(companyID uint) ([]domain.Category
 	if err := r.db.Where("company_id = ?", companyID).Order("id ASC").Find(&categories).Error; err != nil {
 		return nil, err
 	}
+	categoriesPtrs := make([]*domain.Category, len(categories))
+	for i := range categories {
+		categoriesPtrs[i] = &categories[i]
+	}
+	r.populateAudits(categoriesPtrs)
 	return categories, nil
 }
 

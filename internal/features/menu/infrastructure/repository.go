@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"gorm.io/gorm"
 	"multicliente-backend/internal/features/menu/domain"
+	"multicliente-backend/internal/platform/database"
 )
 
 type menuRepository struct {
@@ -11,6 +12,30 @@ type menuRepository struct {
 
 func NewMenuRepository(db *gorm.DB) domain.MenuRepository {
 	return &menuRepository{db: db}
+}
+
+func (r *menuRepository) populateAudits(menus []*domain.Menu) {
+	var userIDs []uint
+	for _, m := range menus {
+		if m.CreateBy != nil {
+			userIDs = append(userIDs, *m.CreateBy)
+		}
+		if m.UpdateBy != nil {
+			userIDs = append(userIDs, *m.UpdateBy)
+		}
+	}
+	namesMap, err := database.GetUserNamesMap(r.db, userIDs)
+	if err != nil {
+		return
+	}
+	for _, m := range menus {
+		if m.CreateBy != nil {
+			m.CreateByName = namesMap[*m.CreateBy]
+		}
+		if m.UpdateBy != nil {
+			m.UpdateByName = namesMap[*m.UpdateBy]
+		}
+	}
 }
 
 func (r *menuRepository) Create(menu *domain.Menu) error {
@@ -22,6 +47,7 @@ func (r *menuRepository) FindByID(id uint) (*domain.Menu, error) {
 	if err := r.db.First(&menu, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
+	r.populateAudits([]*domain.Menu{&menu})
 	return &menu, nil
 }
 
@@ -30,6 +56,11 @@ func (r *menuRepository) FindAll() ([]domain.Menu, error) {
 	if err := r.db.Order("sort_order ASC, id ASC").Find(&menus).Error; err != nil {
 		return nil, err
 	}
+	menusPtrs := make([]*domain.Menu, len(menus))
+	for i := range menus {
+		menusPtrs[i] = &menus[i]
+	}
+	r.populateAudits(menusPtrs)
 	return menus, nil
 }
 
@@ -46,6 +77,7 @@ func (r *menuRepository) GetAllowedMenusForRole(roleID uint) ([]domain.AllowedMe
 		ID        uint
 		Label     string
 		LabelEN   string
+		LabelFR   string
 		Route     string
 		Icon      string
 		SortOrder int
@@ -55,7 +87,7 @@ func (r *menuRepository) GetAllowedMenusForRole(roleID uint) ([]domain.AllowedMe
 
 	var rows []resultRow
 	err := r.db.Table("administrative.menus m").
-		Select("m.id, m.label, m.label_en, m.route, m.icon, m.sort_order, m.parent_id, o.code as opt_code").
+		Select("m.id, m.label, m.label_en, m.label_fr, m.route, m.icon, m.sort_order, m.parent_id, o.code as opt_code").
 		Joins("JOIN administrative.permissions p ON p.menu_id = m.id").
 		Joins("JOIN administrative.options o ON o.id = p.option_id").
 		Where("p.role_id = ? AND m.is_active = true", roleID).
@@ -74,6 +106,7 @@ func (r *menuRepository) GetAllowedMenusForRole(roleID uint) ([]domain.AllowedMe
 				ID:          row.ID,
 				Label:       row.Label,
 				LabelEN:     row.LabelEN,
+				LabelFR:     row.LabelFR,
 				Route:       row.Route,
 				Icon:        row.Icon,
 				SortOrder:   row.SortOrder,
@@ -96,6 +129,7 @@ func (r *menuRepository) GetAllowedMenusForRole(roleID uint) ([]domain.AllowedMe
 						ID:          parentMenu.ID,
 						Label:       parentMenu.Label,
 						LabelEN:     parentMenu.LabelEN,
+						LabelFR:     parentMenu.LabelFR,
 						Route:       parentMenu.Route,
 						Icon:        parentMenu.Icon,
 						SortOrder:   parentMenu.SortOrder,

@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"gorm.io/gorm"
 	"multicliente-backend/internal/features/role/domain"
+	"multicliente-backend/internal/platform/database"
 )
 
 type roleRepository struct {
@@ -11,6 +12,30 @@ type roleRepository struct {
 
 func NewRoleRepository(db *gorm.DB) domain.RoleRepository {
 	return &roleRepository{db: db}
+}
+
+func (r *roleRepository) populateAudits(roles []*domain.Role) {
+	var userIDs []uint
+	for _, r := range roles {
+		if r.CreateBy != nil {
+			userIDs = append(userIDs, *r.CreateBy)
+		}
+		if r.UpdateBy != nil {
+			userIDs = append(userIDs, *r.UpdateBy)
+		}
+	}
+	namesMap, err := database.GetUserNamesMap(r.db, userIDs)
+	if err != nil {
+		return
+	}
+	for _, r := range roles {
+		if r.CreateBy != nil {
+			r.CreateByName = namesMap[*r.CreateBy]
+		}
+		if r.UpdateBy != nil {
+			r.UpdateByName = namesMap[*r.UpdateBy]
+		}
+	}
 }
 
 func (r *roleRepository) Create(role *domain.Role) error {
@@ -22,6 +47,7 @@ func (r *roleRepository) FindByID(id uint) (*domain.Role, error) {
 	if err := r.db.Preload("Permissions").First(&role, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
+	r.populateAudits([]*domain.Role{&role})
 	return &role, nil
 }
 
@@ -30,6 +56,11 @@ func (r *roleRepository) FindAll() ([]domain.Role, error) {
 	if err := r.db.Preload("Permissions").Order("id ASC").Find(&roles).Error; err != nil {
 		return nil, err
 	}
+	rolesPtrs := make([]*domain.Role, len(roles))
+	for i := range roles {
+		rolesPtrs[i] = &roles[i]
+	}
+	r.populateAudits(rolesPtrs)
 	return roles, nil
 }
 

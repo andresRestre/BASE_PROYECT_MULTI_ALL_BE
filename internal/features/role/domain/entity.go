@@ -5,15 +5,17 @@ import (
 )
 
 type Role struct {
-	ID          uint         `gorm:"primaryKey" json:"id"`
-	Name        string       `gorm:"type:varchar(100);uniqueIndex;not null" json:"name"`
-	Code        string       `gorm:"type:varchar(50);uniqueIndex;not null" json:"code"`
-	IsActive    bool         `gorm:"default:true" json:"is_active"`
-	CreateBy    *uint        `json:"create_by"`
-	CreateAt    time.Time    `gorm:"autoCreateTime" json:"create_at"`
-	UpdateBy    *uint        `json:"update_by"`
-	UpdateAt    time.Time    `gorm:"autoUpdateTime" json:"update_at"`
-	Permissions []Permission `json:"permissions,omitempty" gorm:"foreignKey:RoleID;constraint:OnDelete:CASCADE"`
+	ID           uint         `gorm:"primaryKey" json:"id"`
+	Name         string       `gorm:"type:varchar(100);uniqueIndex;not null" json:"name"`
+	Code         string       `gorm:"type:varchar(50);uniqueIndex;not null" json:"code"`
+	IsActive     bool         `gorm:"default:true" json:"is_active"`
+	CreateBy     *uint        `json:"create_by"`
+	CreateAt     time.Time    `gorm:"autoCreateTime" json:"create_at"`
+	UpdateBy     *uint        `json:"update_by"`
+	UpdateAt     time.Time    `gorm:"autoUpdateTime" json:"update_at"`
+	CreateByName string       `gorm:"-" json:"create_by_name"`
+	UpdateByName string       `gorm:"-" json:"update_by_name"`
+	Permissions  []Permission `json:"permissions,omitempty" gorm:"foreignKey:RoleID;constraint:OnDelete:CASCADE"`
 }
 
 func (Role) TableName() string {

@@ -4,6 +4,7 @@ import (
 	"gorm.io/gorm"
 
 	"multicliente-backend/internal/features/user/domain"
+	"multicliente-backend/internal/platform/database"
 )
 
 type userRepository struct {
@@ -13,6 +14,30 @@ type userRepository struct {
 // NewUserRepository creates a new GORM-based UserRepository.
 func NewUserRepository(db *gorm.DB) domain.UserRepository {
 	return &userRepository{db: db}
+}
+
+func (r *userRepository) populateAudits(users []*domain.User) {
+	var userIDs []uint
+	for _, u := range users {
+		if u.CreateBy != nil {
+			userIDs = append(userIDs, *u.CreateBy)
+		}
+		if u.UpdateBy != nil {
+			userIDs = append(userIDs, *u.UpdateBy)
+		}
+	}
+	namesMap, err := database.GetUserNamesMap(r.db, userIDs)
+	if err != nil {
+		return
+	}
+	for _, u := range users {
+		if u.CreateBy != nil {
+			u.CreateByName = namesMap[*u.CreateBy]
+		}
+		if u.UpdateBy != nil {
+			u.UpdateByName = namesMap[*u.UpdateBy]
+		}
+	}
 }
 
 func (r *userRepository) Create(user *domain.User) error {
@@ -29,6 +54,7 @@ func (r *userRepository) FindByID(id uint) (*domain.User, error) {
 	if err := r.db.Preload("Role").Preload("Companies").First(&user, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
+	r.populateAudits([]*domain.User{&user})
 	return &user, nil
 }
 
@@ -37,6 +63,7 @@ func (r *userRepository) FindByEmail(email string) (*domain.User, error) {
 	if err := r.db.Preload("Role").Preload("Companies").First(&user, "email = ?", email).Error; err != nil {
 		return nil, err
 	}
+	r.populateAudits([]*domain.User{&user})
 	return &user, nil
 }
 
@@ -45,6 +72,11 @@ func (r *userRepository) FindAll() ([]domain.User, error) {
 	if err := r.db.Preload("Role").Preload("Companies").Order("create_at DESC").Find(&users).Error; err != nil {
 		return nil, err
 	}
+	usersPtrs := make([]*domain.User, len(users))
+	for i := range users {
+		usersPtrs[i] = &users[i]
+	}
+	r.populateAudits(usersPtrs)
 	return users, nil
 }
 

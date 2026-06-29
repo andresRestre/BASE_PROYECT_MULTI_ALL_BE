@@ -5,18 +5,20 @@ import (
 )
 
 type Category struct {
-	ID        uint       `gorm:"primaryKey" json:"id"`
-	CompanyID uint       `gorm:"not null" json:"company_id"`
-	Name      string     `gorm:"type:varchar(100);not null" json:"name"`
-	IsActive  bool       `gorm:"default:true" json:"is_active"`
-	CreateBy  *uint      `json:"create_by"`
-	CreateAt  time.Time  `gorm:"autoCreateTime" json:"create_at"`
-	UpdateBy  *uint      `json:"update_by"`
-	UpdateAt  time.Time  `gorm:"autoUpdateTime" json:"update_at"`
+	ID           uint       `gorm:"primaryKey" json:"id"`
+	CompanyID    uint       `gorm:"not null" json:"company_id"`
+	Name         string     `gorm:"type:varchar(100);not null" json:"name"`
+	IsActive     bool       `gorm:"default:true" json:"is_active"`
+	CreateBy     *uint      `json:"create_by"`
+	CreateAt     time.Time  `gorm:"autoCreateTime" json:"create_at"`
+	UpdateBy     *uint      `json:"update_by"`
+	UpdateAt     time.Time  `gorm:"autoUpdateTime" json:"update_at"`
+	CreateByName string     `gorm:"-" json:"create_by_name"`
+	UpdateByName string     `gorm:"-" json:"update_by_name"`
 }
 
 func (Category) TableName() string {
-	return "administrative.categories"
+	return "app.categories"
 }
 
 type CreateCategoryRequest struct {

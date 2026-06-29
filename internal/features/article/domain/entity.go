@@ -7,19 +7,21 @@ import (
 )
 
 type Article struct {
-	ID         uint                    `gorm:"primaryKey" json:"id"`
-	CompanyID  uint                    `gorm:"not null" json:"company_id"`
-	CategoryID uint                    `gorm:"not null" json:"category_id"`
-	Category   *categoryDomain.Category `gorm:"foreignKey:CategoryID" json:"category,omitempty"`
-	Name       string                  `gorm:"type:varchar(150);not null" json:"name"`
-	CreateBy   *uint                   `json:"create_by"`
-	CreateAt   time.Time               `gorm:"autoCreateTime" json:"create_at"`
-	UpdateBy   *uint                   `json:"update_by"`
-	UpdateAt   time.Time               `gorm:"autoUpdateTime" json:"update_at"`
+	ID           uint                    `gorm:"primaryKey" json:"id"`
+	CompanyID    uint                    `gorm:"not null" json:"company_id"`
+	CategoryID   uint                    `gorm:"not null" json:"category_id"`
+	Category     *categoryDomain.Category `gorm:"foreignKey:CategoryID" json:"category,omitempty"`
+	Name         string                  `gorm:"type:varchar(150);not null" json:"name"`
+	CreateBy     *uint                   `json:"create_by"`
+	CreateAt     time.Time               `gorm:"autoCreateTime" json:"create_at"`
+	UpdateBy     *uint                   `json:"update_by"`
+	UpdateAt     time.Time               `gorm:"autoUpdateTime" json:"update_at"`
+	CreateByName string                  `gorm:"-" json:"create_by_name"`
+	UpdateByName string                  `gorm:"-" json:"update_by_name"`
 }
 
 func (Article) TableName() string {
-	return "administrative.articles"
+	return "app.articles"
 }
 
 type CreateArticleRequest struct {

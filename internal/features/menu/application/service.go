@@ -17,6 +17,7 @@ func (s *menuService) CreateMenu(req *domain.CreateMenuRequest, createdBy *uint)
 	menu := &domain.Menu{
 		Label:     req.Label,
 		LabelEN:   req.LabelEN,
+		LabelFR:   req.LabelFR,
 		Route:     req.Route,
 		Icon:      req.Icon,
 		SortOrder: req.SortOrder,
@@ -59,6 +60,9 @@ func (s *menuService) UpdateMenu(id uint, req *domain.UpdateMenuRequest, updated
 	}
 	if req.LabelEN != nil {
 		menu.LabelEN = *req.LabelEN
+	}
+	if req.LabelFR != nil {
+		menu.LabelFR = *req.LabelFR
 	}
 	if req.Route != nil {
 		menu.Route = *req.Route

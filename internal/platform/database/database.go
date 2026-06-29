@@ -26,12 +26,3 @@ func Connect(cfg *config.Config) (*gorm.DB, error) {
 
 	return db, nil
 }
-
-// Migrate runs GORM AutoMigrate for the provided models after ensuring the required schema exists.
-func Migrate(db *gorm.DB, models ...interface{}) error {
-	// Create administrative schema if not exists
-	if err := db.Exec("CREATE SCHEMA IF NOT EXISTS administrative").Error; err != nil {
-		return fmt.Errorf("failed to create schema administrative: %w", err)
-	}
-	return db.AutoMigrate(models...)
-}
