@@ -1,0 +1,66 @@
+package infrastructure
+
+import (
+	"gorm.io/gorm"
+	"multicliente-backend/internal/features/role/domain"
+)
+
+type roleRepository struct {
+	db *gorm.DB
+}
+
+func NewRoleRepository(db *gorm.DB) domain.RoleRepository {
+	return &roleRepository{db: db}
+}
+
+func (r *roleRepository) Create(role *domain.Role) error {
+	return r.db.Create(role).Error
+}
+
+func (r *roleRepository) FindByID(id uint) (*domain.Role, error) {
+	var role domain.Role
+	if err := r.db.Preload("Permissions").First(&role, "id = ?", id).Error; err != nil {
+		return nil, err
+	}
+	return &role, nil
+}
+
+func (r *roleRepository) FindAll() ([]domain.Role, error) {
+	var roles []domain.Role
+	if err := r.db.Preload("Permissions").Order("id ASC").Find(&roles).Error; err != nil {
+		return nil, err
+	}
+	return roles, nil
+}
+
+func (r *roleRepository) Update(role *domain.Role) error {
+	return r.db.Save(role).Error
+}
+
+func (r *roleRepository) Delete(id uint) error {
+	return r.db.Delete(&domain.Role{}, "id = ?", id).Error
+}
+
+func (r *roleRepository) ReplacePermissions(roleID uint, permissions []domain.Permission) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// Delete existing permissions
+		if err := tx.Delete(&domain.Permission{}, "role_id = ?", roleID).Error; err != nil {
+			return err
+		}
+		// Insert new permissions if any
+		if len(permissions) > 0 {
+			if err := tx.Create(&permissions).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (r *roleRepository) FindAllOptions() ([]domain.Option, error) {
+	var options []domain.Option
+	if err := r.db.Order("id ASC").Find(&options).Error; err != nil {
+		return nil, err
+	}
+	return options, nil
+}

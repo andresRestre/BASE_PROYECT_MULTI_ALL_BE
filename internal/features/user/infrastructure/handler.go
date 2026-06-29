@@ -1,0 +1,136 @@
+package infrastructure
+
+import (
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+
+	"multicliente-backend/internal/features/user/domain"
+)
+
+// UserHandler handles HTTP requests for user CRUD operations.
+type UserHandler struct {
+	service domain.UserService
+}
+
+// NewUserHandler creates a new UserHandler with the given service.
+func NewUserHandler(service domain.UserService) *UserHandler {
+	return &UserHandler{service: service}
+}
+
+// Create handles POST /api/users
+func (h *UserHandler) Create(c *gin.Context) {
+	var req domain.CreateUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	createdBy := getUserIDFromContext(c)
+
+	response, err := h.service.CreateUser(&req, createdBy)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, response)
+}
+
+// GetAll handles GET /api/users
+func (h *UserHandler) GetAll(c *gin.Context) {
+	users, err := h.service.GetAllUsers()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, users)
+}
+
+// GetByID handles GET /api/users/:id
+func (h *UserHandler) GetByID(c *gin.Context) {
+	idVal, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+		return
+	}
+	id := uint(idVal)
+
+	user, err := h.service.GetUserByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
+}
+
+// Update handles PUT /api/users/:id
+func (h *UserHandler) Update(c *gin.Context) {
+	idVal, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+		return
+	}
+	id := uint(idVal)
+
+	var req domain.UpdateUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	updatedBy := getUserIDFromContext(c)
+
+	response, err := h.service.UpdateUser(id, &req, updatedBy)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// Delete handles DELETE /api/users/:id
+func (h *UserHandler) Delete(c *gin.Context) {
+	idVal, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+		return
+	}
+	id := uint(idVal)
+
+	if err := h.service.DeleteUser(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "user deleted successfully"})
+}
+
+// getUserIDFromContext extracts the authenticated user's uint ID from the Gin context.
+func getUserIDFromContext(c *gin.Context) *uint {
+	userIDVal, exists := c.Get("user_id")
+	if !exists {
+		return nil
+	}
+
+	// It could be float64 when decoded from JWT claims map
+	if f, ok := userIDVal.(float64); ok {
+		u := uint(f)
+		return &u
+	}
+
+	// Or string
+	if s, ok := userIDVal.(string); ok {
+		idVal, err := strconv.ParseUint(s, 10, 32)
+		if err == nil {
+			u := uint(idVal)
+			return &u
+		}
+	}
+
+	return nil
+}
