@@ -1,11 +1,14 @@
 package middleware
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+
+	"multicliente-backend/internal/platform/i18n"
 )
 
 // RequireCompanyAccess checks if the X-Company-ID header is present and if the user is authorized.
@@ -14,14 +17,14 @@ func RequireCompanyAccess(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		companyIDStr := c.GetHeader("X-Company-ID")
 		if companyIDStr == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "X-Company-ID header is required"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": i18n.TranslateError(c, errors.New("X-Company-ID header is required"))})
 			c.Abort()
 			return
 		}
 
 		companyIDVal, err := strconv.ParseUint(companyIDStr, 10, 32)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid X-Company-ID format"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": i18n.TranslateError(c, errors.New("invalid X-Company-ID format"))})
 			c.Abort()
 			return
 		}
@@ -30,7 +33,7 @@ func RequireCompanyAccess(db *gorm.DB) gin.HandlerFunc {
 		// 1. Get role code from context
 		roleCodeVal, exists := c.Get("role")
 		if !exists {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "role information not found in token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.TranslateError(c, errors.New("role information not found in token"))})
 			c.Abort()
 			return
 		}
@@ -46,7 +49,7 @@ func RequireCompanyAccess(db *gorm.DB) gin.HandlerFunc {
 		// 2. Get user_id from context
 		userIDVal, exists := c.Get("user_id")
 		if !exists {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "user ID not found in token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.TranslateError(c, errors.New("user ID not found in token"))})
 			c.Abort()
 			return
 		}
@@ -59,13 +62,13 @@ func RequireCompanyAccess(db *gorm.DB) gin.HandlerFunc {
 		} else if s, ok := userIDVal.(string); ok {
 			parsed, err := strconv.ParseUint(s, 10, 32)
 			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID in session"})
+				c.JSON(http.StatusBadRequest, gin.H{"error": i18n.TranslateError(c, errors.New("invalid user ID in session"))})
 				c.Abort()
 				return
 			}
 			userID = uint(parsed)
 		} else {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported user ID format"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": i18n.TranslateError(c, errors.New("unsupported user ID format"))})
 			c.Abort()
 			return
 		}
@@ -77,13 +80,13 @@ func RequireCompanyAccess(db *gorm.DB) gin.HandlerFunc {
 			Count(&count).Error
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to verify company permissions"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.TranslateError(c, errors.New("failed to verify company permissions"))})
 			c.Abort()
 			return
 		}
 
 		if count == 0 {
-			c.JSON(http.StatusForbidden, gin.H{"error": "access denied to this company"})
+			c.JSON(http.StatusForbidden, gin.H{"error": i18n.TranslateError(c, errors.New("access denied to this company"))})
 			c.Abort()
 			return
 		}

@@ -8,8 +8,9 @@ type LoginRequest struct {
 
 // LoginResponse is returned after a successful login.
 type LoginResponse struct {
-	Token string   `json:"token"`
-	User  UserInfo `json:"user"`
+	Token                  string   `json:"token"`
+	User                   UserInfo `json:"user"`
+	SessionDurationSeconds int      `json:"session_duration_seconds"`
 }
 
 // UserInfo contains the basic user data included in the login response.
@@ -20,4 +21,11 @@ type UserInfo struct {
 	LastName  string `json:"last_name"`
 	RoleID    *uint  `json:"role_id"`
 	RoleCode  string `json:"role_code"`
+}
+
+// ChangePasswordRequest represents the payload to change own password in profile
+type ChangePasswordRequest struct {
+	CurrentPassword        string `json:"current_password" binding:"required"`
+	ConfirmCurrentPassword string `json:"confirm_current_password" binding:"required"`
+	NewPassword            string `json:"new_password" binding:"required,min=6"`
 }

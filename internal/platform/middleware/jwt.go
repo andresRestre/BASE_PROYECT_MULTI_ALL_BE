@@ -1,33 +1,42 @@
 package middleware
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+
+	"multicliente-backend/internal/platform/i18n"
 )
 
 // JWTAuth returns a Gin middleware that validates Bearer JWT tokens.
 // It extracts user_id and email from claims and sets them in the context.
 func JWTAuth(secret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		tokenString := ""
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization header is required"})
+		if authHeader != "" {
+			parts := strings.SplitN(authHeader, " ", 2)
+			if len(parts) == 2 && strings.EqualFold(parts[0], "bearer") {
+				tokenString = parts[1]
+			}
+		}
+
+		// Try loading from cookie if header is empty or has invalid format
+		if tokenString == "" {
+			if cookieToken, err := c.Cookie("token"); err == nil {
+				tokenString = cookieToken
+			}
+		}
+
+		if tokenString == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.TranslateError(c, errors.New("authorization token is required"))})
 			c.Abort()
 			return
 		}
-
-		parts := strings.SplitN(authHeader, " ", 2)
-		if len(parts) != 2 || !strings.EqualFold(parts[0], "bearer") {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization header format, expected: Bearer <token>"})
-			c.Abort()
-			return
-		}
-
-		tokenString := parts[1]
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -37,14 +46,14 @@ func JWTAuth(secret string) gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.TranslateError(c, errors.New("invalid or expired token"))})
 			c.Abort()
 			return
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token claims"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.TranslateError(c, errors.New("invalid token claims"))})
 			c.Abort()
 			return
 		}

@@ -15,12 +15,15 @@ func NewRoleService(repo domain.RoleRepository) domain.RoleService {
 
 func (s *roleService) CreateRole(req *domain.CreateRoleRequest, createdBy *uint) (*domain.Role, error) {
 	role := &domain.Role{
-		Name:     req.Name,
-		Code:     req.Code,
-		IsActive: true,
-		CreateBy: createdBy,
+		Name:           req.Name,
+		Code:           req.Code,
+		Description:    req.Description,
+		SessionDays:    req.SessionDays,
+		SessionHours:   req.SessionHours,
+		SessionMinutes: req.SessionMinutes,
+		IsActive:       true,
+		CreateBy:       createdBy,
 	}
-
 	if err := s.repo.Create(role); err != nil {
 		return nil, err
 	}
@@ -67,6 +70,18 @@ func (s *roleService) UpdateRole(id uint, req *domain.UpdateRoleRequest, updated
 	}
 	if req.Code != nil {
 		role.Code = *req.Code
+	}
+	if req.Description != nil {
+		role.Description = *req.Description
+	}
+	if req.SessionDays != nil {
+		role.SessionDays = *req.SessionDays
+	}
+	if req.SessionHours != nil {
+		role.SessionHours = *req.SessionHours
+	}
+	if req.SessionMinutes != nil {
+		role.SessionMinutes = *req.SessionMinutes
 	}
 	if req.IsActive != nil {
 		role.IsActive = *req.IsActive

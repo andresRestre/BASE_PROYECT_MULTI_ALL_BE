@@ -7,6 +7,7 @@ import (
 	"multicliente-backend/internal/features/menu/application"
 	"multicliente-backend/internal/features/menu/domain"
 	"multicliente-backend/internal/features/menu/infrastructure"
+	"multicliente-backend/internal/platform/middleware"
 )
 
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, requireRole gin.HandlerFunc) domain.MenuRepository {
@@ -19,12 +20,11 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, requireRole gin.Handle
 
 	menus := router.Group("/menus")
 	{
-		// SuperAdmin only CRUD
-		menus.GET("", requireRole, handler.GetAll)
-		menus.GET("/:id", requireRole, handler.GetByID)
-		menus.POST("", requireRole, handler.Create)
-		menus.PUT("/:id", requireRole, handler.Update)
-		menus.DELETE("/:id", requireRole, handler.Delete)
+		menus.GET("", middleware.RequirePermission(db, "/menus", "VIEW"), handler.GetAll)
+		menus.GET("/:id", middleware.RequirePermission(db, "/menus", "VIEW"), handler.GetByID)
+		menus.POST("", middleware.RequirePermission(db, "/menus", "CREATE"), handler.Create)
+		menus.PUT("/:id", middleware.RequirePermission(db, "/menus", "EDIT"), handler.Update)
+		menus.DELETE("/:id", middleware.RequirePermission(db, "/menus", "DELETE"), handler.Delete)
 	}
 
 	return repo

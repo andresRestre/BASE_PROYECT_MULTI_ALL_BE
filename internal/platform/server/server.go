@@ -14,5 +14,8 @@ func NewRouter() *gin.Engine {
 	router.Use(middleware.CORS())
 	router.Use(middleware.Translation())
 
+	// Serve uploaded profile and company images
+	router.Static("/uploads", "./uploads")
+
 	return router
 }

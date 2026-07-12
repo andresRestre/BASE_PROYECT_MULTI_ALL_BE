@@ -7,6 +7,7 @@ import (
 	"multicliente-backend/internal/features/company/application"
 	"multicliente-backend/internal/features/company/domain"
 	"multicliente-backend/internal/features/company/infrastructure"
+	"multicliente-backend/internal/platform/middleware"
 )
 
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, requireRole gin.HandlerFunc) domain.CompanyRepository {
@@ -16,13 +17,12 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, requireRole gin.Handle
 
 	companies := router.Group("/companies")
 	{
-		companies.GET("", handler.GetAll)
-		companies.GET("/:id", handler.GetByID)
+		companies.GET("", middleware.RequirePermission(db, "/companies", "VIEW"), handler.GetAll)
+		companies.GET("/:id", middleware.RequirePermission(db, "/companies", "VIEW"), handler.GetByID)
 		
-		// SuperAdmin only endpoints
-		companies.POST("", requireRole, handler.Create)
-		companies.PUT("/:id", requireRole, handler.Update)
-		companies.DELETE("/:id", requireRole, handler.Delete)
+		companies.POST("", middleware.RequirePermission(db, "/companies", "CREATE"), handler.Create)
+		companies.PUT("/:id", middleware.RequirePermission(db, "/companies", "EDIT"), handler.Update)
+		companies.DELETE("/:id", middleware.RequirePermission(db, "/companies", "DELETE"), handler.Delete)
 	}
 
 	return repo

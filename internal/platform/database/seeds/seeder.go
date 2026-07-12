@@ -3,23 +3,24 @@ package seeds
 import (
 	"log"
 	"gorm.io/gorm"
+	"multicliente-backend/internal/platform/database/seeds/access_control"
 )
 
 // Seed populates default options, roles, menus, permissions, companies, and the admin user.
 func Seed(db *gorm.DB) {
-	if err := SeedOptions(db); err != nil {
+	if err := access_control.SeedOptions(db); err != nil {
 		log.Printf("❌ Failed to seed options: %v", err)
 		return
 	}
-	if err := SeedRoles(db); err != nil {
+	if err := access_control.SeedRoles(db); err != nil {
 		log.Printf("❌ Failed to seed roles: %v", err)
 		return
 	}
-	if err := SeedMenus(db); err != nil {
+	if err := access_control.SeedMenus(db); err != nil {
 		log.Printf("❌ Failed to seed menus: %v", err)
 		return
 	}
-	if err := SeedPermissions(db); err != nil {
+	if err := access_control.SeedPermissions(db); err != nil {
 		log.Printf("❌ Failed to seed permissions: %v", err)
 		return
 	}
@@ -27,7 +28,7 @@ func Seed(db *gorm.DB) {
 		log.Printf("❌ Failed to seed companies: %v", err)
 		return
 	}
-	if err := SeedUsers(db); err != nil {
+	if err := access_control.SeedUsers(db); err != nil {
 		log.Printf("❌ Failed to seed users: %v", err)
 		return
 	}

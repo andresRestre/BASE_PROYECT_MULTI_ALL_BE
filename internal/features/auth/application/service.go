@@ -57,6 +57,17 @@ func (s *authService) Login(req *authDomain.LoginRequest) (*authDomain.LoginResp
 		roleIDVal = &user.Role.ID
 	}
 
+	// Determine token expiration duration
+	expirationDuration := time.Hour * time.Duration(s.jwtExpHours)
+	if user.Role != nil {
+		roleDuration := time.Duration(user.Role.SessionDays)*24*time.Hour +
+			time.Duration(user.Role.SessionHours)*time.Hour +
+			time.Duration(user.Role.SessionMinutes)*time.Minute
+		if roleDuration > 0 {
+			expirationDuration = roleDuration
+		}
+	}
+
 	// Generate JWT token
 	now := time.Now()
 	claims := jwt.MapClaims{
@@ -65,7 +76,7 @@ func (s *authService) Login(req *authDomain.LoginRequest) (*authDomain.LoginResp
 		"role":     roleCode,
 		"role_id":  roleIDVal,
 		"iat":      now.Unix(),
-		"exp":      now.Add(time.Hour * time.Duration(s.jwtExpHours)).Unix(),
+		"exp":      now.Add(expirationDuration).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -84,6 +95,7 @@ func (s *authService) Login(req *authDomain.LoginRequest) (*authDomain.LoginResp
 			RoleID:    roleIDVal,
 			RoleCode:  roleCode,
 		},
+		SessionDurationSeconds: int(expirationDuration.Seconds()),
 	}, nil
 }
 
@@ -95,4 +107,29 @@ func (s *authService) GetProfile(userID uint) (*userDomain.User, error) {
 	// Hide password hash
 	user.Password = ""
 	return user, nil
+}
+
+func (s *authService) ChangePassword(userID uint, req *authDomain.ChangePasswordRequest) error {
+	if req.CurrentPassword != req.ConfirmCurrentPassword {
+		return errors.New("la contraseña actual y la confirmación no coinciden")
+	}
+
+	user, err := s.userRepo.FindByID(userID)
+	if err != nil {
+		return errors.New("usuario no encontrado")
+	}
+
+	// Verify current password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.CurrentPassword)); err != nil {
+		return errors.New("la contraseña actual es incorrecta")
+	}
+
+	// Hash new password
+	hashed, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return errors.New("falló al procesar la nueva contraseña")
+	}
+
+	user.Password = string(hashed)
+	return s.userRepo.Update(user)
 }

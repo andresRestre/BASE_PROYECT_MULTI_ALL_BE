@@ -7,6 +7,7 @@ import (
 	"multicliente-backend/internal/features/user/application"
 	"multicliente-backend/internal/features/user/domain"
 	"multicliente-backend/internal/features/user/infrastructure"
+	"multicliente-backend/internal/platform/middleware"
 )
 
 // RegisterRoutes wires up the user feature: repository → service → handler → routes.
@@ -18,11 +19,11 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB) domain.UserRepository 
 
 	users := router.Group("/users")
 	{
-		users.POST("", handler.Create)
-		users.GET("", handler.GetAll)
-		users.GET("/:id", handler.GetByID)
-		users.PUT("/:id", handler.Update)
-		users.DELETE("/:id", handler.Delete)
+		users.POST("", middleware.RequirePermission(db, "/users", "CREATE"), handler.Create)
+		users.GET("", middleware.RequirePermission(db, "/users", "VIEW"), handler.GetAll)
+		users.GET("/:id", middleware.RequirePermission(db, "/users", "VIEW"), handler.GetByID)
+		users.PUT("/:id", middleware.RequirePermission(db, "/users", "EDIT"), handler.Update)
+		users.DELETE("/:id", middleware.RequirePermission(db, "/users", "DELETE"), handler.Delete)
 	}
 
 	return repo

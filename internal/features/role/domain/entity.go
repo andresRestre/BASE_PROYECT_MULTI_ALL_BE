@@ -5,17 +5,21 @@ import (
 )
 
 type Role struct {
-	ID           uint         `gorm:"primaryKey" json:"id"`
-	Name         string       `gorm:"type:varchar(100);uniqueIndex;not null" json:"name"`
-	Code         string       `gorm:"type:varchar(50);uniqueIndex;not null" json:"code"`
-	IsActive     bool         `gorm:"default:true" json:"is_active"`
-	CreateBy     *uint        `json:"create_by"`
-	CreateAt     time.Time    `gorm:"autoCreateTime" json:"create_at"`
-	UpdateBy     *uint        `json:"update_by"`
-	UpdateAt     time.Time    `gorm:"autoUpdateTime" json:"update_at"`
-	CreateByName string       `gorm:"-" json:"create_by_name"`
-	UpdateByName string       `gorm:"-" json:"update_by_name"`
-	Permissions  []Permission `json:"permissions,omitempty" gorm:"foreignKey:RoleID;constraint:OnDelete:CASCADE"`
+	ID             uint         `gorm:"primaryKey" json:"id"`
+	Name           string       `gorm:"type:varchar(100);uniqueIndex;not null" json:"name"`
+	Code           string       `gorm:"type:varchar(50);uniqueIndex;not null" json:"code"`
+	Description    string       `gorm:"type:varchar(255)" json:"description"`
+	SessionDays    int          `gorm:"default:0" json:"session_days"`
+	SessionHours   int          `gorm:"default:24" json:"session_hours"`
+	SessionMinutes int          `gorm:"default:0" json:"session_minutes"`
+	IsActive       bool         `gorm:"default:true" json:"is_active"`
+	CreateBy       *uint        `json:"create_by"`
+	CreateAt       time.Time    `gorm:"autoCreateTime" json:"create_at"`
+	UpdateBy       *uint        `json:"update_by"`
+	UpdateAt       time.Time    `gorm:"autoUpdateTime" json:"update_at"`
+	CreateByName   string       `gorm:"-" json:"create_by_name"`
+	UpdateByName   string       `gorm:"-" json:"update_by_name"`
+	Permissions    []Permission `json:"permissions,omitempty" gorm:"foreignKey:RoleID;constraint:OnDelete:CASCADE"`
 }
 
 func (Role) TableName() string {
@@ -49,14 +53,22 @@ type PermissionRequest struct {
 }
 
 type CreateRoleRequest struct {
-	Name        string              `json:"name" binding:"required"`
-	Code        string              `json:"code" binding:"required"`
-	Permissions []PermissionRequest `json:"permissions"`
+	Name           string              `json:"name" binding:"required"`
+	Code           string              `json:"code" binding:"required"`
+	Description    string              `json:"description"`
+	SessionDays    int                 `json:"session_days"`
+	SessionHours   int                 `json:"session_hours"`
+	SessionMinutes int                 `json:"session_minutes"`
+	Permissions    []PermissionRequest `json:"permissions"`
 }
 
 type UpdateRoleRequest struct {
-	Name        *string             `json:"name"`
-	Code        *string             `json:"code"`
-	IsActive    *bool               `json:"is_active"`
-	Permissions []PermissionRequest `json:"permissions"`
+	Name           *string             `json:"name"`
+	Code           *string             `json:"code"`
+	Description    *string             `json:"description"`
+	SessionDays    *int                `json:"session_days"`
+	SessionHours   *int                `json:"session_hours"`
+	SessionMinutes *int                `json:"session_minutes"`
+	IsActive       *bool               `json:"is_active"`
+	Permissions    []PermissionRequest `json:"permissions"`
 }

@@ -17,6 +17,7 @@ import (
 	menuDomain "multicliente-backend/internal/features/menu/domain"
 	"multicliente-backend/internal/features/role"
 	roleDomain "multicliente-backend/internal/features/role/domain"
+	"multicliente-backend/internal/features/upload"
 	"multicliente-backend/internal/features/user"
 	userDomain "multicliente-backend/internal/features/user/domain"
 	"multicliente-backend/internal/platform/config"
@@ -83,6 +84,7 @@ func main() {
 	menu.RegisterRoutes(protected, db, superAdminRequired)
 	category.RegisterRoutes(protected, db, requireCompanyAccess)
 	article.RegisterRoutes(protected, db, requireCompanyAccess)
+	upload.RegisterRoutes(protected)
 
 	// Health check (public)
 	api.GET("/health", func(c *gin.Context) {

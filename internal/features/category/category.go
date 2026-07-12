@@ -7,6 +7,7 @@ import (
 	"multicliente-backend/internal/features/category/application"
 	"multicliente-backend/internal/features/category/domain"
 	"multicliente-backend/internal/features/category/infrastructure"
+	"multicliente-backend/internal/platform/middleware"
 )
 
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, requireCompanyAccess gin.HandlerFunc) domain.CategoryService {
@@ -17,11 +18,11 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, requireCompanyAccess g
 	categories := router.Group("/categories")
 	categories.Use(requireCompanyAccess)
 	{
-		categories.POST("", handler.Create)
-		categories.GET("", handler.GetAll)
-		categories.GET("/:id", handler.GetByID)
-		categories.PUT("/:id", handler.Update)
-		categories.DELETE("/:id", handler.Delete)
+		categories.POST("", middleware.RequirePermission(db, "/categories", "CREATE"), handler.Create)
+		categories.GET("", middleware.RequirePermission(db, "/categories", "VIEW"), handler.GetAll)
+		categories.GET("/:id", middleware.RequirePermission(db, "/categories", "VIEW"), handler.GetByID)
+		categories.PUT("/:id", middleware.RequirePermission(db, "/categories", "EDIT"), handler.Update)
+		categories.DELETE("/:id", middleware.RequirePermission(db, "/categories", "DELETE"), handler.Delete)
 	}
 
 	return service

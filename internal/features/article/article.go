@@ -7,6 +7,7 @@ import (
 	"multicliente-backend/internal/features/article/application"
 	"multicliente-backend/internal/features/article/domain"
 	"multicliente-backend/internal/features/article/infrastructure"
+	"multicliente-backend/internal/platform/middleware"
 )
 
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, requireCompanyAccess gin.HandlerFunc) domain.ArticleService {
@@ -17,11 +18,11 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, requireCompanyAccess g
 	articles := router.Group("/articles")
 	articles.Use(requireCompanyAccess)
 	{
-		articles.POST("", handler.Create)
-		articles.GET("", handler.GetAll)
-		articles.GET("/:id", handler.GetByID)
-		articles.PUT("/:id", handler.Update)
-		articles.DELETE("/:id", handler.Delete)
+		articles.POST("", middleware.RequirePermission(db, "/items", "CREATE"), handler.Create)
+		articles.GET("", middleware.RequirePermission(db, "/items", "VIEW"), handler.GetAll)
+		articles.GET("/:id", middleware.RequirePermission(db, "/items", "VIEW"), handler.GetByID)
+		articles.PUT("/:id", middleware.RequirePermission(db, "/items", "EDIT"), handler.Update)
+		articles.DELETE("/:id", middleware.RequirePermission(db, "/items", "DELETE"), handler.Delete)
 	}
 
 	return service

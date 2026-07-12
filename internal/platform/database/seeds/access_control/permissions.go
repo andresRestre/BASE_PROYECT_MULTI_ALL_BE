@@ -1,4 +1,4 @@
-package seeds
+package access_control
 
 import (
 	"log"
@@ -37,6 +37,21 @@ func SeedPermissions(db *gorm.DB) error {
 		{RoleID: 1, MenuID: 7, OptionID: 2},
 		{RoleID: 1, MenuID: 7, OptionID: 3},
 		{RoleID: 1, MenuID: 7, OptionID: 4},
+		// Permissions for Access Control Folder itself (MenuID 8)
+		{RoleID: 1, MenuID: 8, OptionID: 1},
+		{RoleID: 1, MenuID: 8, OptionID: 2},
+		{RoleID: 1, MenuID: 8, OptionID: 3},
+		{RoleID: 1, MenuID: 8, OptionID: 4},
+		// Permissions for Statistics (MenuID 9)
+		{RoleID: 1, MenuID: 9, OptionID: 1},
+		{RoleID: 1, MenuID: 9, OptionID: 2},
+		{RoleID: 1, MenuID: 9, OptionID: 3},
+		{RoleID: 1, MenuID: 9, OptionID: 4},
+		// Permissions for Dashboard (MenuID 10)
+		{RoleID: 1, MenuID: 10, OptionID: 1},
+		{RoleID: 1, MenuID: 10, OptionID: 2},
+		{RoleID: 1, MenuID: 10, OptionID: 3},
+		{RoleID: 1, MenuID: 10, OptionID: 4},
 	}
 	for _, p := range permissions {
 		if err := db.FirstOrCreate(&p, roleDomain.Permission{RoleID: p.RoleID, MenuID: p.MenuID, OptionID: p.OptionID}).Error; err != nil {

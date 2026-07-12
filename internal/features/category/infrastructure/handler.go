@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"multicliente-backend/internal/features/category/domain"
+	"multicliente-backend/internal/platform/i18n"
 )
 
 type CategoryHandler struct {
@@ -15,11 +16,10 @@ type CategoryHandler struct {
 func NewCategoryHandler(service domain.CategoryService) *CategoryHandler {
 	return &CategoryHandler{service: service}
 }
-
 func (h *CategoryHandler) Create(c *gin.Context) {
 	var req domain.CreateCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -28,7 +28,7 @@ func (h *CategoryHandler) Create(c *gin.Context) {
 
 	cat, err := h.service.CreateCategory(&req, companyID, createdBy)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -40,7 +40,7 @@ func (h *CategoryHandler) GetAll(c *gin.Context) {
 
 	categories, err := h.service.GetCategoriesByCompany(companyID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -50,21 +50,21 @@ func (h *CategoryHandler) GetAll(c *gin.Context) {
 func (h *CategoryHandler) GetByID(c *gin.Context) {
 	idVal, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid category ID"})
+		i18n.ErrorString(c, http.StatusBadRequest, "invalid category ID")
 		return
 	}
 	id := uint(idVal)
 
 	cat, err := h.service.GetCategoryByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusNotFound, err)
 		return
 	}
 
 	// Verify the category belongs to the active company context
 	companyID := c.MustGet("active_company_id").(uint)
 	if cat.CompanyID != companyID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "access denied to this category context"})
+		i18n.ErrorString(c, http.StatusForbidden, "access_denied")
 		return
 	}
 
@@ -74,7 +74,7 @@ func (h *CategoryHandler) GetByID(c *gin.Context) {
 func (h *CategoryHandler) Update(c *gin.Context) {
 	idVal, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid category ID"})
+		i18n.ErrorString(c, http.StatusBadRequest, "invalid category ID")
 		return
 	}
 	id := uint(idVal)
@@ -82,18 +82,18 @@ func (h *CategoryHandler) Update(c *gin.Context) {
 	// Verify active company context matches category
 	cat, err := h.service.GetCategoryByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusNotFound, err)
 		return
 	}
 	companyID := c.MustGet("active_company_id").(uint)
 	if cat.CompanyID != companyID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "access denied to this category context"})
+		i18n.ErrorString(c, http.StatusForbidden, "access_denied")
 		return
 	}
 
 	var req domain.UpdateCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -101,7 +101,7 @@ func (h *CategoryHandler) Update(c *gin.Context) {
 
 	updatedCat, err := h.service.UpdateCategory(id, &req, updatedBy)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -111,7 +111,7 @@ func (h *CategoryHandler) Update(c *gin.Context) {
 func (h *CategoryHandler) Delete(c *gin.Context) {
 	idVal, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid category ID"})
+		i18n.ErrorString(c, http.StatusBadRequest, "invalid category ID")
 		return
 	}
 	id := uint(idVal)
@@ -119,17 +119,17 @@ func (h *CategoryHandler) Delete(c *gin.Context) {
 	// Verify active company context matches category
 	cat, err := h.service.GetCategoryByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusNotFound, err)
 		return
 	}
 	companyID := c.MustGet("active_company_id").(uint)
 	if cat.CompanyID != companyID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "access denied to this category context"})
+		i18n.ErrorString(c, http.StatusForbidden, "access_denied")
 		return
 	}
 
 	if err := h.service.DeleteCategory(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusInternalServerError, err)
 		return
 	}
 

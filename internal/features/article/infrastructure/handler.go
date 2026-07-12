@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"multicliente-backend/internal/features/article/domain"
+	"multicliente-backend/internal/platform/i18n"
 )
 
 type ArticleHandler struct {
@@ -19,7 +20,7 @@ func NewArticleHandler(service domain.ArticleService) *ArticleHandler {
 func (h *ArticleHandler) Create(c *gin.Context) {
 	var req domain.CreateArticleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -28,7 +29,7 @@ func (h *ArticleHandler) Create(c *gin.Context) {
 
 	art, err := h.service.CreateArticle(&req, companyID, createdBy)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -40,7 +41,7 @@ func (h *ArticleHandler) GetAll(c *gin.Context) {
 
 	articles, err := h.service.GetArticlesByCompany(companyID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -50,20 +51,20 @@ func (h *ArticleHandler) GetAll(c *gin.Context) {
 func (h *ArticleHandler) GetByID(c *gin.Context) {
 	idVal, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid article ID"})
+		i18n.ErrorString(c, http.StatusBadRequest, "invalid article ID")
 		return
 	}
 	id := uint(idVal)
 
 	art, err := h.service.GetArticleByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusNotFound, err)
 		return
 	}
 
 	companyID := c.MustGet("active_company_id").(uint)
 	if art.CompanyID != companyID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "access denied to this article context"})
+		i18n.ErrorString(c, http.StatusForbidden, "access_denied")
 		return
 	}
 
@@ -73,25 +74,25 @@ func (h *ArticleHandler) GetByID(c *gin.Context) {
 func (h *ArticleHandler) Update(c *gin.Context) {
 	idVal, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid article ID"})
+		i18n.ErrorString(c, http.StatusBadRequest, "invalid article ID")
 		return
 	}
 	id := uint(idVal)
 
 	art, err := h.service.GetArticleByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusNotFound, err)
 		return
 	}
 	companyID := c.MustGet("active_company_id").(uint)
 	if art.CompanyID != companyID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "access denied to this article context"})
+		i18n.ErrorString(c, http.StatusForbidden, "access_denied")
 		return
 	}
 
 	var req domain.UpdateArticleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -99,7 +100,7 @@ func (h *ArticleHandler) Update(c *gin.Context) {
 
 	updatedArt, err := h.service.UpdateArticle(id, &req, updatedBy)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -109,24 +110,24 @@ func (h *ArticleHandler) Update(c *gin.Context) {
 func (h *ArticleHandler) Delete(c *gin.Context) {
 	idVal, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid article ID"})
+		i18n.ErrorString(c, http.StatusBadRequest, "invalid article ID")
 		return
 	}
 	id := uint(idVal)
 
 	art, err := h.service.GetArticleByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusNotFound, err)
 		return
 	}
 	companyID := c.MustGet("active_company_id").(uint)
 	if art.CompanyID != companyID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "access denied to this article context"})
+		i18n.ErrorString(c, http.StatusForbidden, "access_denied")
 		return
 	}
 
 	if err := h.service.DeleteArticle(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusInternalServerError, err)
 		return
 	}
 

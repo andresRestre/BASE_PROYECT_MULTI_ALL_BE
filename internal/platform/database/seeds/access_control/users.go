@@ -1,4 +1,4 @@
-package seeds
+package access_control
 
 import (
 	"log"

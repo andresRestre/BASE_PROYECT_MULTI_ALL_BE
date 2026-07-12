@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"multicliente-backend/internal/features/user/domain"
+	"multicliente-backend/internal/platform/i18n"
 )
 
 // UserHandler handles HTTP requests for user CRUD operations.
@@ -23,7 +24,7 @@ func NewUserHandler(service domain.UserService) *UserHandler {
 func (h *UserHandler) Create(c *gin.Context) {
 	var req domain.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -31,7 +32,7 @@ func (h *UserHandler) Create(c *gin.Context) {
 
 	response, err := h.service.CreateUser(&req, createdBy)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -42,7 +43,7 @@ func (h *UserHandler) Create(c *gin.Context) {
 func (h *UserHandler) GetAll(c *gin.Context) {
 	users, err := h.service.GetAllUsers()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -53,14 +54,14 @@ func (h *UserHandler) GetAll(c *gin.Context) {
 func (h *UserHandler) GetByID(c *gin.Context) {
 	idVal, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+		i18n.ErrorString(c, http.StatusBadRequest, "invalid user ID")
 		return
 	}
 	id := uint(idVal)
 
 	user, err := h.service.GetUserByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		i18n.Error(c, http.StatusNotFound, err)
 		return
 	}
 
@@ -71,14 +72,14 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 func (h *UserHandler) Update(c *gin.Context) {
 	idVal, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+		i18n.ErrorString(c, http.StatusBadRequest, "invalid user ID")
 		return
 	}
 	id := uint(idVal)
 
 	var req domain.UpdateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -86,7 +87,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 
 	response, err := h.service.UpdateUser(id, &req, updatedBy)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -97,13 +98,13 @@ func (h *UserHandler) Update(c *gin.Context) {
 func (h *UserHandler) Delete(c *gin.Context) {
 	idVal, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+		i18n.ErrorString(c, http.StatusBadRequest, "invalid user ID")
 		return
 	}
 	id := uint(idVal)
 
 	if err := h.service.DeleteUser(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusInternalServerError, err)
 		return
 	}
 

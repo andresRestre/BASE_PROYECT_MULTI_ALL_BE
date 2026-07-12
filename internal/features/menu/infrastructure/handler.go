@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"multicliente-backend/internal/features/menu/domain"
+	"multicliente-backend/internal/platform/i18n"
 )
 
 type MenuHandler struct {
@@ -19,7 +20,7 @@ func NewMenuHandler(service domain.MenuService) *MenuHandler {
 func (h *MenuHandler) Create(c *gin.Context) {
 	var req domain.CreateMenuRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -27,7 +28,7 @@ func (h *MenuHandler) Create(c *gin.Context) {
 
 	menu, err := h.service.CreateMenu(&req, createdBy)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -37,7 +38,7 @@ func (h *MenuHandler) Create(c *gin.Context) {
 func (h *MenuHandler) GetAll(c *gin.Context) {
 	menus, err := h.service.GetAllMenus()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -47,14 +48,14 @@ func (h *MenuHandler) GetAll(c *gin.Context) {
 func (h *MenuHandler) GetByID(c *gin.Context) {
 	idVal, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid menu ID"})
+		i18n.ErrorString(c, http.StatusBadRequest, "invalid menu ID")
 		return
 	}
 	id := uint(idVal)
 
 	menu, err := h.service.GetMenuByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusNotFound, err)
 		return
 	}
 
@@ -64,14 +65,14 @@ func (h *MenuHandler) GetByID(c *gin.Context) {
 func (h *MenuHandler) Update(c *gin.Context) {
 	idVal, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid menu ID"})
+		i18n.ErrorString(c, http.StatusBadRequest, "invalid menu ID")
 		return
 	}
 	id := uint(idVal)
 
 	var req domain.UpdateMenuRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -79,7 +80,7 @@ func (h *MenuHandler) Update(c *gin.Context) {
 
 	menu, err := h.service.UpdateMenu(id, &req, updatedBy)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -89,13 +90,13 @@ func (h *MenuHandler) Update(c *gin.Context) {
 func (h *MenuHandler) Delete(c *gin.Context) {
 	idVal, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid menu ID"})
+		i18n.ErrorString(c, http.StatusBadRequest, "invalid menu ID")
 		return
 	}
 	id := uint(idVal)
 
 	if err := h.service.DeleteMenu(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -105,7 +106,7 @@ func (h *MenuHandler) Delete(c *gin.Context) {
 func (h *MenuHandler) GetMyMenus(c *gin.Context) {
 	roleIDVal, exists := c.Get("role_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "role information not found in token"})
+		i18n.ErrorString(c, http.StatusUnauthorized, "role information not found in token")
 		return
 	}
 
@@ -117,18 +118,18 @@ func (h *MenuHandler) GetMyMenus(c *gin.Context) {
 	} else if s, ok := roleIDVal.(string); ok {
 		parsed, err := strconv.ParseUint(s, 10, 32)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid role ID in token"})
+			i18n.ErrorString(c, http.StatusBadRequest, "invalid role ID in token")
 			return
 		}
 		roleID = uint(parsed)
 	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported role ID format"})
+		i18n.ErrorString(c, http.StatusBadRequest, "unsupported role ID format")
 		return
 	}
 
 	allowedMenus, err := h.service.GetAllowedMenus(roleID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusInternalServerError, err)
 		return
 	}
 

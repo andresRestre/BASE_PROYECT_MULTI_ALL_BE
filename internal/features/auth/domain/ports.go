@@ -6,4 +6,5 @@ import userDomain "multicliente-backend/internal/features/user/domain"
 type AuthService interface {
 	Login(req *LoginRequest) (*LoginResponse, error)
 	GetProfile(userID uint) (*userDomain.User, error)
+	ChangePassword(userID uint, req *ChangePasswordRequest) error
 }

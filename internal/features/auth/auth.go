@@ -19,5 +19,6 @@ func RegisterRoutes(router *gin.RouterGroup, userRepo userDomain.UserRepository,
 	{
 		authGroup.POST("/login", handler.Login)
 		authGroup.GET("/profile", middleware.JWTAuth(jwtSecret), handler.GetProfile)
+		authGroup.PUT("/change-password", middleware.JWTAuth(jwtSecret), handler.ChangePassword)
 	}
 }

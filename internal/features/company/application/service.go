@@ -18,6 +18,7 @@ func (s *companyService) CreateCompany(req *domain.CreateCompanyRequest, created
 		Name:     req.Name,
 		IsActive: true,
 		CreateBy: createdBy,
+		PhotoURL: req.PhotoURL,
 	}
 
 	if err := s.repo.Create(company); err != nil {
@@ -50,6 +51,9 @@ func (s *companyService) UpdateCompany(id uint, req *domain.UpdateCompanyRequest
 	}
 	if req.IsActive != nil {
 		company.IsActive = *req.IsActive
+	}
+	if req.PhotoURL != nil {
+		company.PhotoURL = *req.PhotoURL
 	}
 	company.UpdateBy = updatedBy
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"multicliente-backend/internal/features/role/domain"
+	"multicliente-backend/internal/platform/i18n"
 )
 
 type RoleHandler struct {
@@ -19,7 +20,7 @@ func NewRoleHandler(service domain.RoleService) *RoleHandler {
 func (h *RoleHandler) Create(c *gin.Context) {
 	var req domain.CreateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -27,7 +28,7 @@ func (h *RoleHandler) Create(c *gin.Context) {
 
 	role, err := h.service.CreateRole(&req, createdBy)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -37,7 +38,7 @@ func (h *RoleHandler) Create(c *gin.Context) {
 func (h *RoleHandler) GetAll(c *gin.Context) {
 	roles, err := h.service.GetAllRoles()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -47,14 +48,14 @@ func (h *RoleHandler) GetAll(c *gin.Context) {
 func (h *RoleHandler) GetByID(c *gin.Context) {
 	idVal, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid role ID"})
+		i18n.ErrorString(c, http.StatusBadRequest, "invalid role ID")
 		return
 	}
 	id := uint(idVal)
 
 	role, err := h.service.GetRoleByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusNotFound, err)
 		return
 	}
 
@@ -64,14 +65,14 @@ func (h *RoleHandler) GetByID(c *gin.Context) {
 func (h *RoleHandler) Update(c *gin.Context) {
 	idVal, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid role ID"})
+		i18n.ErrorString(c, http.StatusBadRequest, "invalid role ID")
 		return
 	}
 	id := uint(idVal)
 
 	var req domain.UpdateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -79,7 +80,7 @@ func (h *RoleHandler) Update(c *gin.Context) {
 
 	role, err := h.service.UpdateRole(id, &req, updatedBy)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -89,13 +90,13 @@ func (h *RoleHandler) Update(c *gin.Context) {
 func (h *RoleHandler) Delete(c *gin.Context) {
 	idVal, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid role ID"})
+		i18n.ErrorString(c, http.StatusBadRequest, "invalid role ID")
 		return
 	}
 	id := uint(idVal)
 
 	if err := h.service.DeleteRole(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -105,7 +106,7 @@ func (h *RoleHandler) Delete(c *gin.Context) {
 func (h *RoleHandler) GetOptions(c *gin.Context) {
 	options, err := h.service.GetAllOptions()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		i18n.Error(c, http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusOK, options)
