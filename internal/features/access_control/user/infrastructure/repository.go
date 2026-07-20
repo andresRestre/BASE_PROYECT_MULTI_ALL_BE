@@ -1,4 +1,4 @@
-﻿package infrastructure
+package infrastructure
 
 import (
 	"gorm.io/gorm"
@@ -115,4 +115,29 @@ func (r *userRepository) Delete(id uint) error {
 		}
 		return nil
 	})
+}
+
+func (r *userRepository) GetUserRoleHierarchy(userID uint) (int, error) {
+	var hierarchy int
+	err := r.db.Table("administrative.users u").
+		Select("r.hierarchy").
+		Joins("JOIN administrative.roles r ON r.id = u.role_id").
+		Where("u.id = ?", userID).
+		Scan(&hierarchy).Error
+	if err != nil {
+		return 999, err
+	}
+	return hierarchy, nil
+}
+
+func (r *userRepository) GetRoleHierarchy(roleID uint) (int, error) {
+	var hierarchy int
+	err := r.db.Table("administrative.roles").
+		Select("hierarchy").
+		Where("id = ?", roleID).
+		Scan(&hierarchy).Error
+	if err != nil {
+		return 999, err
+	}
+	return hierarchy, nil
 }

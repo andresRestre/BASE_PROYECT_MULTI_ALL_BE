@@ -9,6 +9,7 @@ type Role struct {
 	Name           string       `gorm:"type:varchar(100);uniqueIndex;not null" json:"name"`
 	Code           string       `gorm:"type:varchar(50);uniqueIndex;not null" json:"code"`
 	Description    string       `gorm:"type:varchar(255)" json:"description"`
+	Hierarchy      int          `gorm:"default:2" json:"hierarchy"`
 	SessionDays    int          `gorm:"default:0" json:"session_days"`
 	SessionHours   int          `gorm:"default:24" json:"session_hours"`
 	SessionMinutes int          `gorm:"default:0" json:"session_minutes"`
@@ -19,7 +20,8 @@ type Role struct {
 	UpdateAt       time.Time    `gorm:"autoUpdateTime" json:"update_at"`
 	CreateByName   string       `gorm:"-" json:"create_by_name"`
 	UpdateByName   string       `gorm:"-" json:"update_by_name"`
-	Permissions    []Permission `json:"permissions,omitempty" gorm:"foreignKey:RoleID;constraint:OnDelete:CASCADE"`
+	Permissions       []Permission           `json:"permissions,omitempty" gorm:"foreignKey:RoleID;constraint:OnDelete:CASCADE"`
+	NotificationRules []RoleNotificationRule `json:"notification_rules,omitempty" gorm:"foreignKey:TargetRoleID;constraint:OnDelete:CASCADE"`
 }
 
 func (Role) TableName() string {
@@ -53,22 +55,26 @@ type PermissionRequest struct {
 }
 
 type CreateRoleRequest struct {
-	Name           string              `json:"name" binding:"required"`
-	Code           string              `json:"code" binding:"required"`
-	Description    string              `json:"description"`
-	SessionDays    int                 `json:"session_days"`
-	SessionHours   int                 `json:"session_hours"`
-	SessionMinutes int                 `json:"session_minutes"`
-	Permissions    []PermissionRequest `json:"permissions"`
+	Name              string                    `json:"name" binding:"required"`
+	Code              string                    `json:"code" binding:"required"`
+	Description       string                    `json:"description"`
+	Hierarchy         int                       `json:"hierarchy"`
+	SessionDays       int                       `json:"session_days"`
+	SessionHours      int                       `json:"session_hours"`
+	SessionMinutes    int                       `json:"session_minutes"`
+	Permissions       []PermissionRequest       `json:"permissions"`
+	NotificationRules []NotificationRuleRequest `json:"notification_rules"`
 }
 
 type UpdateRoleRequest struct {
-	Name           *string             `json:"name"`
-	Code           *string             `json:"code"`
-	Description    *string             `json:"description"`
-	SessionDays    *int                `json:"session_days"`
-	SessionHours   *int                `json:"session_hours"`
-	SessionMinutes *int                `json:"session_minutes"`
-	IsActive       *bool               `json:"is_active"`
-	Permissions    []PermissionRequest `json:"permissions"`
+	Name              *string                   `json:"name"`
+	Code              *string                   `json:"code"`
+	Description       *string                   `json:"description"`
+	Hierarchy         *int                      `json:"hierarchy"`
+	SessionDays       *int                      `json:"session_days"`
+	SessionHours      *int                      `json:"session_hours"`
+	SessionMinutes    *int                      `json:"session_minutes"`
+	IsActive          *bool                     `json:"is_active"`
+	Permissions       []PermissionRequest       `json:"permissions"`
+	NotificationRules []NotificationRuleRequest `json:"notification_rules"`
 }

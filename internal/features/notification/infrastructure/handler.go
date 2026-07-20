@@ -16,20 +16,64 @@ func NewNotificationHandler(service domain.NotificationService) *NotificationHan
 	return &NotificationHandler{service: service}
 }
 
+func getUserID(c *gin.Context) (uint, bool) {
+	val, exists := c.Get("user_id")
+	if !exists || val == nil {
+		val, exists = c.Get("userID")
+	}
+	if !exists || val == nil {
+		return 0, false
+	}
+	if f, ok := val.(float64); ok {
+		return uint(f), true
+	}
+	if u, ok := val.(uint); ok {
+		return u, true
+	}
+	if p, ok := val.(*uint); ok && p != nil {
+		return *p, true
+	}
+	return 0, false
+}
+
+func getCompanyID(c *gin.Context) (uint, bool) {
+	val, exists := c.Get("company_id")
+	if !exists || val == nil {
+		val, exists = c.Get("companyID")
+	}
+	if exists && val != nil {
+		if f, ok := val.(float64); ok {
+			return uint(f), true
+		}
+		if u, ok := val.(uint); ok {
+			return u, true
+		}
+		if p, ok := val.(*uint); ok && p != nil {
+			return *p, true
+		}
+	}
+	// Fallback to X-Company-ID header
+	header := c.GetHeader("X-Company-ID")
+	if header != "" {
+		if parsed, err := strconv.ParseUint(header, 10, 32); err == nil && parsed > 0 {
+			return uint(parsed), true
+		}
+	}
+	return 0, false
+}
+
 func (h *NotificationHandler) GetNotifications(c *gin.Context) {
-	userIDVal, exists := c.Get("userID")
-	if !exists {
+	userID, ok := getUserID(c)
+	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
 		return
 	}
-	userID := userIDVal.(uint)
 
-	companyIDVal, exists := c.Get("companyID")
-	if !exists {
+	companyID, ok := getCompanyID(c)
+	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "company context missing"})
 		return
 	}
-	companyID := companyIDVal.(uint)
 
 	list, err := h.service.GetNotifications(userID, companyID)
 	if err != nil {
@@ -41,12 +85,11 @@ func (h *NotificationHandler) GetNotifications(c *gin.Context) {
 }
 
 func (h *NotificationHandler) MarkAsRead(c *gin.Context) {
-	userIDVal, exists := c.Get("userID")
-	if !exists {
+	userID, ok := getUserID(c)
+	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
 		return
 	}
-	userID := userIDVal.(uint)
 
 	idStr := c.Param("id")
 	idVal, err := strconv.ParseUint(idStr, 10, 32)
@@ -66,19 +109,17 @@ func (h *NotificationHandler) MarkAsRead(c *gin.Context) {
 }
 
 func (h *NotificationHandler) MarkAllAsRead(c *gin.Context) {
-	userIDVal, exists := c.Get("userID")
-	if !exists {
+	userID, ok := getUserID(c)
+	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
 		return
 	}
-	userID := userIDVal.(uint)
 
-	companyIDVal, exists := c.Get("companyID")
-	if !exists {
+	companyID, ok := getCompanyID(c)
+	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "company context missing"})
 		return
 	}
-	companyID := companyIDVal.(uint)
 
 	err := h.service.MarkAllRead(userID, companyID)
 	if err != nil {

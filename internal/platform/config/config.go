@@ -19,6 +19,13 @@ type Config struct {
 	JWTExpirationHours string
 
 	ServerPort string
+
+	SMTPHost     string
+	SMTPPort     string
+	SMTPUsername string
+	SMTPPassword string
+	SMTPFrom     string
+	AppFrontendURL string
 }
 
 // Load reads the .env file and returns a Config struct with all values.
@@ -40,6 +47,13 @@ func Load() *Config {
 		JWTExpirationHours: getEnv("JWT_EXPIRATION_HOURS", "24"),
 
 		ServerPort: getEnv("SERVER_PORT", "8080"),
+
+		SMTPHost:     getEnv("SMTP_HOST", "localhost"),
+		SMTPPort:     getEnv("SMTP_PORT", "1025"),
+		SMTPUsername: getEnv("SMTP_USERNAME", ""),
+		SMTPPassword: getEnv("SMTP_PASSWORD", ""),
+		SMTPFrom:     getEnv("SMTP_FROM", "noreply@multicliente.com"),
+		AppFrontendURL: getEnv("APP_FRONTEND_URL", "http://localhost:3000"),
 	}
 }
 

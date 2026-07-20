@@ -53,31 +53,50 @@ func (s *notificationService) MarkAllRead(userID uint, companyID uint) error {
 }
 
 func (s *notificationService) TriggerArticleCreatedNotification(companyID uint, creatorID uint, articleName string) error {
-	firstName, lastName, roleCode, err := s.repo.GetCreatorInfo(creatorID)
-	if err != nil {
-		return err
+	return s.TriggerEntityEventNotification(companyID, creatorID, "/inventory/items", "CREATE", articleName)
+}
+
+func (s *notificationService) TriggerEntityEventNotification(companyID uint, actorID uint, menuRoute string, action string, entityName string) error {
+	actor, err := s.repo.GetActorDetails(actorID)
+	actorName := "Usuario"
+	actorRoleName := "Usuario"
+	actorRoleID := uint(0)
+	if err == nil && actor != nil {
+		actorName = fmt.Sprintf("%s %s", actor.FirstName, actor.LastName)
+		actorRoleName = actor.RoleName
+		actorRoleID = actor.RoleID
 	}
 
-	// Trigger notifications only if the creator is NOT an admin or superadmin
-	if roleCode == "admin" || roleCode == "superadmin" {
-		return nil
+	// Find targeted user IDs via dynamic RoleNotificationRule matrix
+	targetUserIDs, _ := s.repo.FindTargetUsersByNotificationRule(companyID, menuRoute, actorRoleID, action)
+
+	// Fallback: if no specific rules exist yet, default to notifying admins and superadmins
+	if len(targetUserIDs) == 0 {
+		targetUserIDs, _ = s.repo.FindAdminsAndSuperadminsByCompany(companyID)
 	}
 
-	// Fetch all admins and superadmins in that company
-	adminIDs, err := s.repo.FindAdminsAndSuperadminsByCompany(companyID)
-	if err != nil {
-		return err
+	actionVerb := "procesado"
+	actionTitle := "Registro Actualizado"
+	switch action {
+	case "CREATE":
+		actionVerb = "creado"
+		actionTitle = "Nuevo Registro Creado"
+	case "EDIT":
+		actionVerb = "modificado"
+		actionTitle = "Registro Modificado"
+	case "DELETE":
+		actionVerb = "eliminado"
+		actionTitle = "Registro Eliminado"
 	}
 
-	title := "Nuevo Artículo Creado"
-	message := fmt.Sprintf("El usuario %s %s ha creado el artículo: %s", firstName, lastName, articleName)
+	title := actionTitle
+	message := fmt.Sprintf("El usuario %s (%s) ha %s: %s", actorName, actorRoleName, actionVerb, entityName)
 
-	for _, adminID := range adminIDs {
-		// Avoid notifying oneself
-		if adminID == creatorID {
-			continue
+	for _, targetID := range targetUserIDs {
+		if targetID == actorID {
+			continue // Avoid notifying oneself
 		}
-		_, _ = s.CreateNotification(companyID, adminID, title, message, "article_created", "/inventory/items")
+		_, _ = s.CreateNotification(companyID, targetID, title, message, "entity_event", menuRoute)
 	}
 
 	return nil

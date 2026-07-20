@@ -7,12 +7,13 @@ import (
 	"multicliente-backend/internal/features/inventory/category/application"
 	"multicliente-backend/internal/features/inventory/category/domain"
 	"multicliente-backend/internal/features/inventory/category/infrastructure"
+	notificationDomain "multicliente-backend/internal/features/notification/domain"
 	"multicliente-backend/internal/platform/middleware"
 )
 
-func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, requireCompanyAccess gin.HandlerFunc) domain.CategoryService {
+func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, requireCompanyAccess gin.HandlerFunc, notificationService notificationDomain.NotificationService) domain.CategoryService {
 	repo := infrastructure.NewCategoryRepository(db)
-	service := application.NewCategoryService(repo)
+	service := application.NewCategoryService(repo, notificationService)
 	handler := infrastructure.NewCategoryHandler(service)
 
 	categories := router.Group("/categories")

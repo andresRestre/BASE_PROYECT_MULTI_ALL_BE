@@ -1,4 +1,4 @@
-﻿package infrastructure
+package infrastructure
 
 import (
 	"net/http"
@@ -94,8 +94,9 @@ func (h *RoleHandler) Delete(c *gin.Context) {
 		return
 	}
 	id := uint(idVal)
+	deletedBy := getUserIDFromContext(c)
 
-	if err := h.service.DeleteRole(id); err != nil {
+	if err := h.service.DeleteRole(id, deletedBy); err != nil {
 		i18n.Error(c, http.StatusInternalServerError, err)
 		return
 	}

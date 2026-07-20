@@ -30,8 +30,8 @@ func (s *articleService) CreateArticle(req *domain.CreateArticleRequest, company
 		return nil, err
 	}
 
-	if createdBy != nil {
-		_ = s.notificationService.TriggerArticleCreatedNotification(companyID, *createdBy, art.Name)
+	if createdBy != nil && s.notificationService != nil {
+		_ = s.notificationService.TriggerEntityEventNotification(companyID, *createdBy, "/inventory/items", "CREATE", art.Name)
 	}
 
 	return s.repo.FindByID(art.ID)
@@ -67,13 +67,23 @@ func (s *articleService) UpdateArticle(id uint, req *domain.UpdateArticleRequest
 		return nil, err
 	}
 
+	if updatedBy != nil && s.notificationService != nil {
+		_ = s.notificationService.TriggerEntityEventNotification(art.CompanyID, *updatedBy, "/inventory/items", "EDIT", art.Name)
+	}
+
 	return s.repo.FindByID(art.ID)
 }
 
 func (s *articleService) DeleteArticle(id uint) error {
-	_, err := s.repo.FindByID(id)
+	art, err := s.repo.FindByID(id)
 	if err != nil {
 		return errors.New("article not found")
 	}
-	return s.repo.Delete(id)
+	if err := s.repo.Delete(id); err != nil {
+		return err
+	}
+	if art.CreateBy != nil && s.notificationService != nil {
+		_ = s.notificationService.TriggerEntityEventNotification(art.CompanyID, *art.CreateBy, "/inventory/items", "DELETE", art.Name)
+	}
+	return nil
 }

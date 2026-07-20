@@ -10,6 +10,6 @@ import (
 
 // RegisterRoutes registers all inventory feature routes (category, article) under a parent route group.
 func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB, requireCompanyAccess gin.HandlerFunc, notificationService notificationDomain.NotificationService) {
-	category.RegisterRoutes(router, db, requireCompanyAccess)
+	category.RegisterRoutes(router, db, requireCompanyAccess, notificationService)
 	article.RegisterRoutes(router, db, requireCompanyAccess, notificationService)
 }

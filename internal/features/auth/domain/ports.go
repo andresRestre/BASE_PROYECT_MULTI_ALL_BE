@@ -1,4 +1,4 @@
-﻿package domain
+package domain
 
 import userDomain "multicliente-backend/internal/features/access_control/user/domain"
 
@@ -7,4 +7,6 @@ type AuthService interface {
 	Login(req *LoginRequest) (*LoginResponse, error)
 	GetProfile(userID uint) (*userDomain.User, error)
 	ChangePassword(userID uint, req *ChangePasswordRequest) error
+	ForgotPassword(req *ForgotPasswordRequest) error
+	ResetPassword(req *ResetPasswordRequest) error
 }

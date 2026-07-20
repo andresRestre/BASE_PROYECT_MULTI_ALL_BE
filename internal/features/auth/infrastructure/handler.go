@@ -98,3 +98,35 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "contraseña cambiada correctamente"})
 }
+
+// ForgotPassword handles POST /api/auth/forgot-password
+func (h *AuthHandler) ForgotPassword(c *gin.Context) {
+	var req domain.ForgotPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.TranslateError(c, err)})
+		return
+	}
+
+	if err := h.service.ForgotPassword(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.TranslateError(c, err)})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Se ha enviado un correo con las instrucciones de recuperación"})
+}
+
+// ResetPassword handles POST /api/auth/reset-password
+func (h *AuthHandler) ResetPassword(c *gin.Context) {
+	var req domain.ResetPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.TranslateError(c, err)})
+		return
+	}
+
+	if err := h.service.ResetPassword(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.TranslateError(c, err)})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Contraseña restablecida correctamente"})
+}

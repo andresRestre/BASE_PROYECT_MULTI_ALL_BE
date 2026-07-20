@@ -1,4 +1,4 @@
-﻿package infrastructure
+package infrastructure
 
 import (
 	"gorm.io/gorm"
@@ -44,7 +44,7 @@ func (r *roleRepository) Create(role *domain.Role) error {
 
 func (r *roleRepository) FindByID(id uint) (*domain.Role, error) {
 	var role domain.Role
-	if err := r.db.Preload("Permissions").First(&role, "id = ?", id).Error; err != nil {
+	if err := r.db.Preload("Permissions").Preload("NotificationRules").First(&role, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	r.populateAudits([]*domain.Role{&role})
@@ -53,7 +53,7 @@ func (r *roleRepository) FindByID(id uint) (*domain.Role, error) {
 
 func (r *roleRepository) FindAll() ([]domain.Role, error) {
 	var roles []domain.Role
-	if err := r.db.Preload("Permissions").Order("id ASC").Find(&roles).Error; err != nil {
+	if err := r.db.Preload("Permissions").Preload("NotificationRules").Order("id ASC").Find(&roles).Error; err != nil {
 		return nil, err
 	}
 	rolesPtrs := make([]*domain.Role, len(roles))
@@ -88,10 +88,42 @@ func (r *roleRepository) ReplacePermissions(roleID uint, permissions []domain.Pe
 	})
 }
 
+func (r *roleRepository) ReplaceNotificationRules(roleID uint, rules []domain.RoleNotificationRule) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// Delete existing notification rules for this target role
+		if err := tx.Delete(&domain.RoleNotificationRule{}, "target_role_id = ?", roleID).Error; err != nil {
+			return err
+		}
+		// Insert new notification rules
+		if len(rules) > 0 {
+			for i := range rules {
+				rules[i].TargetRoleID = roleID
+			}
+			if err := tx.Create(&rules).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
 func (r *roleRepository) FindAllOptions() ([]domain.Option, error) {
 	var options []domain.Option
 	if err := r.db.Order("id ASC").Find(&options).Error; err != nil {
 		return nil, err
 	}
 	return options, nil
+}
+
+func (r *roleRepository) GetUserRoleHierarchy(userID uint) (int, error) {
+	var hierarchy int
+	err := r.db.Table("administrative.users u").
+		Select("r.hierarchy").
+		Joins("JOIN administrative.roles r ON r.id = u.role_id").
+		Where("u.id = ?", userID).
+		Scan(&hierarchy).Error
+	if err != nil {
+		return 999, err
+	}
+	return hierarchy, nil
 }

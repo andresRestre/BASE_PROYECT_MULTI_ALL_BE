@@ -8,6 +8,8 @@ type UserRepository interface {
 	FindAll() ([]User, error)
 	Update(user *User) error
 	Delete(id uint) error
+	GetUserRoleHierarchy(userID uint) (int, error)
+	GetRoleHierarchy(roleID uint) (int, error)
 }
 
 // UserService defines the primary port for user business operations.
@@ -16,5 +18,5 @@ type UserService interface {
 	GetUserByID(id uint) (*UserResponse, error)
 	GetAllUsers() ([]*UserResponse, error)
 	UpdateUser(id uint, req *UpdateUserRequest, updatedBy *uint) (*UserResponse, error)
-	DeleteUser(id uint) error
+	DeleteUser(id uint, deletedBy *uint) error
 }

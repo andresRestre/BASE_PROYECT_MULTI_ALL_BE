@@ -3,6 +3,7 @@ package middleware
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -49,11 +50,18 @@ func RequirePermission(db *gorm.DB, menuRoute string, optionCode string) gin.Han
 			return
 		}
 
-		// 3. Find menu by route
+		// 3. Find menu by route (supports both full route like '/inventory/categories' and short route like '/categories')
+		shortRoute := menuRoute
+		if idx := strings.LastIndex(menuRoute, "/"); idx >= 0 {
+			shortRoute = menuRoute[idx:]
+		}
+
 		var menu struct {
 			ID uint
 		}
-		if err := db.Table("administrative.menus").Select("id").Where("route = ? AND is_active = true", menuRoute).First(&menu).Error; err != nil {
+		if err := db.Table("administrative.menus").Select("id").
+			Where("(route = ? OR route = ?) AND is_active = true", menuRoute, shortRoute).
+			First(&menu).Error; err != nil {
 			c.JSON(http.StatusForbidden, gin.H{"error": i18n.TranslateError(c, errors.New("access denied: menu not found or inactive"))})
 			c.Abort()
 			return

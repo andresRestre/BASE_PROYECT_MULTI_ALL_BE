@@ -1,4 +1,4 @@
-﻿package application
+package application
 
 import (
 	"errors"
@@ -19,6 +19,14 @@ func NewUserService(repo domain.UserRepository) domain.UserService {
 }
 
 func (s *userService) CreateUser(req *domain.CreateUserRequest, createdBy *uint) (*domain.UserResponse, error) {
+	if createdBy != nil && req.RoleID != nil {
+		actorHierarchy, _ := s.repo.GetUserRoleHierarchy(*createdBy)
+		assignedRoleHierarchy, _ := s.repo.GetRoleHierarchy(*req.RoleID)
+		if assignedRoleHierarchy < actorHierarchy {
+			return nil, errors.New("no tienes permiso para asignar un rol con una jerarquía de mayor poder a la tuya")
+		}
+	}
+
 	// Check if email already exists
 	existing, _ := s.repo.FindByEmail(req.Email)
 	if existing != nil {
@@ -82,6 +90,19 @@ func (s *userService) UpdateUser(id uint, req *domain.UpdateUserRequest, updated
 		return nil, errors.New("user not found")
 	}
 
+	if updatedBy != nil {
+		actorHierarchy, _ := s.repo.GetUserRoleHierarchy(*updatedBy)
+		if user.Role != nil && user.Role.Hierarchy < actorHierarchy {
+			return nil, errors.New("no tienes permiso para modificar un usuario con una jerarquía de rol mayor a la tuya")
+		}
+		if req.RoleID != nil {
+			assignedRoleHierarchy, _ := s.repo.GetRoleHierarchy(*req.RoleID)
+			if assignedRoleHierarchy < actorHierarchy {
+				return nil, errors.New("no tienes permiso para asignar un rol con una jerarquía de mayor poder a la tuya")
+			}
+		}
+	}
+
 	if req.Email != nil {
 		existing, _ := s.repo.FindByEmail(*req.Email)
 		if existing != nil && existing.ID != id {
@@ -141,10 +162,18 @@ func (s *userService) UpdateUser(id uint, req *domain.UpdateUserRequest, updated
 	return domain.ToUserResponse(fullUser), nil
 }
 
-func (s *userService) DeleteUser(id uint) error {
-	_, err := s.repo.FindByID(id)
+func (s *userService) DeleteUser(id uint, deletedBy *uint) error {
+	user, err := s.repo.FindByID(id)
 	if err != nil {
 		return errors.New("user not found")
 	}
+
+	if deletedBy != nil {
+		actorHierarchy, _ := s.repo.GetUserRoleHierarchy(*deletedBy)
+		if user.Role != nil && user.Role.Hierarchy < actorHierarchy {
+			return errors.New("no tienes permiso para eliminar un usuario con una jerarquía de rol mayor a la tuya")
+		}
+	}
+
 	return s.repo.Delete(id)
 }

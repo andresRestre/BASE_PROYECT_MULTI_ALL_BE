@@ -7,7 +7,9 @@ type RoleRepository interface {
 	Update(role *Role) error
 	Delete(id uint) error
 	ReplacePermissions(roleID uint, permissions []Permission) error
+	ReplaceNotificationRules(roleID uint, rules []RoleNotificationRule) error
 	FindAllOptions() ([]Option, error)
+	GetUserRoleHierarchy(userID uint) (int, error)
 }
 
 type RoleService interface {
@@ -15,6 +17,6 @@ type RoleService interface {
 	GetRoleByID(id uint) (*Role, error)
 	GetAllRoles() ([]Role, error)
 	UpdateRole(id uint, req *UpdateRoleRequest, updatedBy *uint) (*Role, error)
-	DeleteRole(id uint) error
+	DeleteRole(id uint, deletedBy *uint) error
 	GetAllOptions() ([]Option, error)
 }

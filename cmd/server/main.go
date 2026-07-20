@@ -9,6 +9,7 @@ import (
 	"multicliente-backend/internal/features/access_control"
 	articleDomain "multicliente-backend/internal/features/inventory/article/domain"
 	"multicliente-backend/internal/features/auth"
+	authDomain "multicliente-backend/internal/features/auth/domain"
 	categoryDomain "multicliente-backend/internal/features/inventory/category/domain"
 	companyDomain "multicliente-backend/internal/features/access_control/company/domain"
 	"multicliente-backend/internal/features/cms"
@@ -24,6 +25,7 @@ import (
 	"multicliente-backend/internal/platform/database"
 	"multicliente-backend/internal/platform/database/migrations"
 	"multicliente-backend/internal/platform/database/seeds"
+	"multicliente-backend/internal/platform/email"
 	"multicliente-backend/internal/platform/middleware"
 	"multicliente-backend/internal/platform/server"
 )
@@ -51,8 +53,10 @@ func main() {
 		&roleDomain.Role{},
 		&roleDomain.Option{},
 		&roleDomain.Permission{},
+		&roleDomain.RoleNotificationRule{},
 		&menuDomain.Menu{},
 		&userDomain.User{},
+		&authDomain.PasswordResetToken{},
 		&notificationDomain.Notification{},
 		&cmsDomain.LandingText{},
 		&cmsDomain.LandingNews{},
@@ -65,6 +69,9 @@ func main() {
 
 	// Seed database default values
 	seeds.Seed(db)
+
+	// Initialize services
+	emailService := email.NewEmailService(cfg)
 
 	// Setup Gin router
 	router := server.NewRouter()
@@ -83,7 +90,7 @@ func main() {
 	// Register features
 	accessControlRouter := protected.Group("/access-control")
 	userRepo := access_control.RegisterRoutes(accessControlRouter, db, superAdminRequired)
-	auth.RegisterRoutes(api, userRepo, cfg.JWTSecret, cfg.JWTExpirationHours)
+	auth.RegisterRoutes(api, userRepo, db, emailService, cfg.JWTSecret, cfg.JWTExpirationHours)
 
 	// Register notifications
 	notificationService := notification.RegisterRoutes(protected, db)
