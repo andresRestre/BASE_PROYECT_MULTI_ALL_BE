@@ -1,4 +1,4 @@
-package application
+﻿package application
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	authDomain "multicliente-backend/internal/features/auth/domain"
-	userDomain "multicliente-backend/internal/features/user/domain"
+	userDomain "multicliente-backend/internal/features/access_control/user/domain"
 )
 
 type authService struct {

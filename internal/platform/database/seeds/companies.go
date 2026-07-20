@@ -1,9 +1,9 @@
-package seeds
+﻿package seeds
 
 import (
 	"log"
 	"gorm.io/gorm"
-	companyDomain "multicliente-backend/internal/features/company/domain"
+	companyDomain "multicliente-backend/internal/features/access_control/company/domain"
 )
 
 // SeedCompanies seeds the default test company.

@@ -32,6 +32,10 @@ func Seed(db *gorm.DB) {
 		log.Printf("❌ Failed to seed users: %v", err)
 		return
 	}
+	if err := SeedCMS(db); err != nil {
+		log.Printf("❌ Failed to seed CMS data: %v", err)
+		return
+	}
 
 	// Reset sequences in Postgres for manually inserted IDs
 	db.Exec("SELECT setval(pg_get_serial_sequence('administrative.roles', 'id'), COALESCE((SELECT MAX(id) FROM administrative.roles), 1))")

@@ -6,20 +6,20 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"multicliente-backend/internal/features/article"
-	articleDomain "multicliente-backend/internal/features/article/domain"
+	"multicliente-backend/internal/features/access_control"
+	articleDomain "multicliente-backend/internal/features/inventory/article/domain"
 	"multicliente-backend/internal/features/auth"
-	"multicliente-backend/internal/features/category"
-	categoryDomain "multicliente-backend/internal/features/category/domain"
-	"multicliente-backend/internal/features/company"
-	companyDomain "multicliente-backend/internal/features/company/domain"
-	"multicliente-backend/internal/features/menu"
-	menuDomain "multicliente-backend/internal/features/menu/domain"
-	"multicliente-backend/internal/features/role"
-	roleDomain "multicliente-backend/internal/features/role/domain"
+	categoryDomain "multicliente-backend/internal/features/inventory/category/domain"
+	companyDomain "multicliente-backend/internal/features/access_control/company/domain"
+	"multicliente-backend/internal/features/cms"
+	cmsDomain "multicliente-backend/internal/features/cms/domain"
+	menuDomain "multicliente-backend/internal/features/access_control/menu/domain"
+	roleDomain "multicliente-backend/internal/features/access_control/role/domain"
+	"multicliente-backend/internal/features/inventory"
+	notificationDomain "multicliente-backend/internal/features/notification/domain"
+	"multicliente-backend/internal/features/notification"
 	"multicliente-backend/internal/features/upload"
-	"multicliente-backend/internal/features/user"
-	userDomain "multicliente-backend/internal/features/user/domain"
+	userDomain "multicliente-backend/internal/features/access_control/user/domain"
 	"multicliente-backend/internal/platform/config"
 	"multicliente-backend/internal/platform/database"
 	"multicliente-backend/internal/platform/database/migrations"
@@ -53,6 +53,10 @@ func main() {
 		&roleDomain.Permission{},
 		&menuDomain.Menu{},
 		&userDomain.User{},
+		&notificationDomain.Notification{},
+		&cmsDomain.LandingText{},
+		&cmsDomain.LandingNews{},
+		&cmsDomain.LandingBanner{},
 	)
 	if err != nil {
 		log.Fatalf("❌ Failed to run migrations: %v", err)
@@ -77,14 +81,20 @@ func main() {
 	requireCompanyAccess := middleware.RequireCompanyAccess(db)
 
 	// Register features
-	userRepo := user.RegisterRoutes(protected, db)
+	accessControlRouter := protected.Group("/access-control")
+	userRepo := access_control.RegisterRoutes(accessControlRouter, db, superAdminRequired)
 	auth.RegisterRoutes(api, userRepo, cfg.JWTSecret, cfg.JWTExpirationHours)
-	company.RegisterRoutes(protected, db, superAdminRequired)
-	role.RegisterRoutes(protected, db, superAdminRequired)
-	menu.RegisterRoutes(protected, db, superAdminRequired)
-	category.RegisterRoutes(protected, db, requireCompanyAccess)
-	article.RegisterRoutes(protected, db, requireCompanyAccess)
+
+	// Register notifications
+	notificationService := notification.RegisterRoutes(protected, db)
+	
+	inventoryRouter := protected.Group("/inventory")
+	inventory.RegisterRoutes(inventoryRouter, db, requireCompanyAccess, notificationService)
+
 	upload.RegisterRoutes(protected)
+
+	// Register CMS / Landing Page Routes (Public & Protected)
+	cms.RegisterRoutes(api, protected, db)
 
 	// Health check (public)
 	api.GET("/health", func(c *gin.Context) {

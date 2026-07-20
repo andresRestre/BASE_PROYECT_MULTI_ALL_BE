@@ -23,8 +23,10 @@ type Config struct {
 
 // Load reads the .env file and returns a Config struct with all values.
 func Load() *Config {
-	// Load .env file (ignore error if not found)
-	godotenv.Load()
+	// Try loading .env from multiple paths to support running from different directories
+	// (e.g., from backend/ or backend/cmd/server/)
+	_ = godotenv.Load()            // current directory
+	_ = godotenv.Load("../../.env") // from cmd/server/ -> backend/.env
 
 	return &Config{
 		DBHost:     getEnv("DB_HOST", "localhost"),

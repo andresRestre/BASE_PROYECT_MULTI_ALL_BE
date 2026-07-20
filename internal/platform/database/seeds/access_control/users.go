@@ -1,4 +1,4 @@
-package access_control
+﻿package access_control
 
 import (
 	"log"
@@ -6,8 +6,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
-	companyDomain "multicliente-backend/internal/features/company/domain"
-	userDomain "multicliente-backend/internal/features/user/domain"
+	companyDomain "multicliente-backend/internal/features/access_control/company/domain"
+	userDomain "multicliente-backend/internal/features/access_control/user/domain"
 )
 
 // SeedUsers seeds default administrator user.

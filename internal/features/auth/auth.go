@@ -1,11 +1,11 @@
-package auth
+﻿package auth
 
 import (
 	"github.com/gin-gonic/gin"
 
 	"multicliente-backend/internal/features/auth/application"
 	"multicliente-backend/internal/features/auth/infrastructure"
-	userDomain "multicliente-backend/internal/features/user/domain"
+	userDomain "multicliente-backend/internal/features/access_control/user/domain"
 	"multicliente-backend/internal/platform/middleware"
 )
 

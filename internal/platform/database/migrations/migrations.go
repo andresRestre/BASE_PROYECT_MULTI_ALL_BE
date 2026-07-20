@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Migrate runs GORM AutoMigrate for the provided models after ensuring the required schema exists.
+// Migrate runs GORM AutoMigrate for the provided models after ensuring the required schemas exist.
 func Migrate(db *gorm.DB, models ...interface{}) error {
 	// Create administrative schema if not exists
 	if err := db.Exec("CREATE SCHEMA IF NOT EXISTS administrative").Error; err != nil {
@@ -14,6 +14,10 @@ func Migrate(db *gorm.DB, models ...interface{}) error {
 	// Create app schema if not exists
 	if err := db.Exec("CREATE SCHEMA IF NOT EXISTS app").Error; err != nil {
 		return fmt.Errorf("failed to create schema app: %w", err)
+	}
+	// Create cms schema if not exists
+	if err := db.Exec("CREATE SCHEMA IF NOT EXISTS cms").Error; err != nil {
+		return fmt.Errorf("failed to create schema cms: %w", err)
 	}
 	return db.AutoMigrate(models...)
 }

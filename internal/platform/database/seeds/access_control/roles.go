@@ -1,9 +1,9 @@
-package access_control
+﻿package access_control
 
 import (
 	"log"
 	"gorm.io/gorm"
-	roleDomain "multicliente-backend/internal/features/role/domain"
+	roleDomain "multicliente-backend/internal/features/access_control/role/domain"
 )
 
 // SeedRoles seeds system roles into database.

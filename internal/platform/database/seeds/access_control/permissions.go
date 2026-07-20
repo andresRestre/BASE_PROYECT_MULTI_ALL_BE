@@ -3,61 +3,39 @@ package access_control
 import (
 	"log"
 	"gorm.io/gorm"
-	roleDomain "multicliente-backend/internal/features/role/domain"
+	menuDomain "multicliente-backend/internal/features/access_control/menu/domain"
+	roleDomain "multicliente-backend/internal/features/access_control/role/domain"
 )
 
-// SeedPermissions seeds default CRUD permissions for superadmin.
+// SeedPermissions seeds default CRUD permissions for all menus dynamically for SuperAdmin and Admin roles.
 func SeedPermissions(db *gorm.DB) error {
-	permissions := []roleDomain.Permission{
-		{RoleID: 1, MenuID: 1, OptionID: 1},
-		{RoleID: 1, MenuID: 1, OptionID: 2},
-		{RoleID: 1, MenuID: 1, OptionID: 3},
-		{RoleID: 1, MenuID: 1, OptionID: 4},
-		{RoleID: 1, MenuID: 2, OptionID: 1},
-		{RoleID: 1, MenuID: 2, OptionID: 2},
-		{RoleID: 1, MenuID: 2, OptionID: 3},
-		{RoleID: 1, MenuID: 2, OptionID: 4},
-		{RoleID: 1, MenuID: 3, OptionID: 1},
-		{RoleID: 1, MenuID: 3, OptionID: 2},
-		{RoleID: 1, MenuID: 3, OptionID: 3},
-		{RoleID: 1, MenuID: 3, OptionID: 4},
-		{RoleID: 1, MenuID: 4, OptionID: 1},
-		{RoleID: 1, MenuID: 4, OptionID: 2},
-		{RoleID: 1, MenuID: 4, OptionID: 3},
-		{RoleID: 1, MenuID: 4, OptionID: 4},
-		{RoleID: 1, MenuID: 5, OptionID: 1},
-		{RoleID: 1, MenuID: 5, OptionID: 2},
-		{RoleID: 1, MenuID: 5, OptionID: 3},
-		{RoleID: 1, MenuID: 5, OptionID: 4},
-		{RoleID: 1, MenuID: 6, OptionID: 1},
-		{RoleID: 1, MenuID: 6, OptionID: 2},
-		{RoleID: 1, MenuID: 6, OptionID: 3},
-		{RoleID: 1, MenuID: 6, OptionID: 4},
-		{RoleID: 1, MenuID: 7, OptionID: 1},
-		{RoleID: 1, MenuID: 7, OptionID: 2},
-		{RoleID: 1, MenuID: 7, OptionID: 3},
-		{RoleID: 1, MenuID: 7, OptionID: 4},
-		// Permissions for Access Control Folder itself (MenuID 8)
-		{RoleID: 1, MenuID: 8, OptionID: 1},
-		{RoleID: 1, MenuID: 8, OptionID: 2},
-		{RoleID: 1, MenuID: 8, OptionID: 3},
-		{RoleID: 1, MenuID: 8, OptionID: 4},
-		// Permissions for Statistics (MenuID 9)
-		{RoleID: 1, MenuID: 9, OptionID: 1},
-		{RoleID: 1, MenuID: 9, OptionID: 2},
-		{RoleID: 1, MenuID: 9, OptionID: 3},
-		{RoleID: 1, MenuID: 9, OptionID: 4},
-		// Permissions for Dashboard (MenuID 10)
-		{RoleID: 1, MenuID: 10, OptionID: 1},
-		{RoleID: 1, MenuID: 10, OptionID: 2},
-		{RoleID: 1, MenuID: 10, OptionID: 3},
-		{RoleID: 1, MenuID: 10, OptionID: 4},
+	var menus []menuDomain.Menu
+	if err := db.Find(&menus).Error; err != nil {
+		return err
 	}
-	for _, p := range permissions {
-		if err := db.FirstOrCreate(&p, roleDomain.Permission{RoleID: p.RoleID, MenuID: p.MenuID, OptionID: p.OptionID}).Error; err != nil {
-			return err
+
+	roleIDs := []uint{1, 2} // Grant full permissions to SuperAdmin (1) and Admin (2)
+	optionIDs := []uint{1, 2, 3, 4} // VIEW, CREATE, EDIT, DELETE
+
+	for _, menu := range menus {
+		for _, roleID := range roleIDs {
+			for _, optionID := range optionIDs {
+				perm := roleDomain.Permission{
+					RoleID:   roleID,
+					MenuID:   menu.ID,
+					OptionID: optionID,
+				}
+				if err := db.FirstOrCreate(&perm, roleDomain.Permission{
+					RoleID:   roleID,
+					MenuID:   menu.ID,
+					OptionID: optionID,
+				}).Error; err != nil {
+					return err
+				}
+			}
 		}
 	}
-	log.Println("✅ Permissions seeded")
+
+	log.Println("✅ Dynamic Menu Permissions Seeded Successfully")
 	return nil
 }

@@ -1,6 +1,6 @@
-package domain
+﻿package domain
 
-import userDomain "multicliente-backend/internal/features/user/domain"
+import userDomain "multicliente-backend/internal/features/access_control/user/domain"
 
 // AuthService defines the primary port for authentication operations.
 type AuthService interface {
