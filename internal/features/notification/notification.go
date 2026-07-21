@@ -19,6 +19,8 @@ func RegisterRoutes(router *gin.RouterGroup, db *gorm.DB) domain.NotificationSer
 		notifs.GET("", handler.GetNotifications)
 		notifs.PUT("/:id/read", handler.MarkAsRead)
 		notifs.PUT("/mark-all-read", handler.MarkAllAsRead)
+		notifs.DELETE("/:id", handler.DeleteNotification)
+		notifs.DELETE("", handler.DeleteAllNotifications)
 	}
 
 	return service

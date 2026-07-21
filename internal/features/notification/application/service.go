@@ -52,6 +52,14 @@ func (s *notificationService) MarkAllRead(userID uint, companyID uint) error {
 	return s.repo.MarkAllAsRead(userID, companyID)
 }
 
+func (s *notificationService) DeleteNotification(id uint, userID uint) error {
+	return s.repo.Delete(id, userID)
+}
+
+func (s *notificationService) DeleteAllNotifications(userID uint, companyID uint) error {
+	return s.repo.DeleteAllByUserAndCompany(userID, companyID)
+}
+
 func (s *notificationService) TriggerArticleCreatedNotification(companyID uint, creatorID uint, articleName string) error {
 	return s.TriggerEntityEventNotification(companyID, creatorID, "/inventory/items", "CREATE", articleName)
 }

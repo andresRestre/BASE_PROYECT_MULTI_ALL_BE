@@ -43,6 +43,14 @@ func (r *notificationRepository) MarkAllAsRead(userID uint, companyID uint) erro
 		Update("is_read", true).Error
 }
 
+func (r *notificationRepository) Delete(id uint, userID uint) error {
+	return r.db.Where("id = ? AND user_id = ?", id, userID).Delete(&domain.Notification{}).Error
+}
+
+func (r *notificationRepository) DeleteAllByUserAndCompany(userID uint, companyID uint) error {
+	return r.db.Where("user_id = ? AND company_id = ?", userID, companyID).Delete(&domain.Notification{}).Error
+}
+
 func (r *notificationRepository) FindAdminsAndSuperadminsByCompany(companyID uint) ([]uint, error) {
 	// 1. All superadmins (who manage all companies in system)
 	var superAdminIDs []uint

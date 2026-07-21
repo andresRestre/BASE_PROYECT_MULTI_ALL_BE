@@ -14,6 +14,8 @@ type NotificationRepository interface {
 	FindByID(id uint) (*Notification, error)
 	Update(notification *Notification) error
 	MarkAllAsRead(userID uint, companyID uint) error
+	Delete(id uint, userID uint) error
+	DeleteAllByUserAndCompany(userID uint, companyID uint) error
 	FindAdminsAndSuperadminsByCompany(companyID uint) ([]uint, error)
 	GetCreatorInfo(userID uint) (string, string, string, error) // firstName, lastName, roleCode, error
 	GetActorDetails(userID uint) (*ActorDetails, error)
@@ -25,6 +27,8 @@ type NotificationService interface {
 	GetNotifications(userID uint, companyID uint) ([]Notification, error)
 	MarkAsRead(id uint, userID uint) (*Notification, error)
 	MarkAllRead(userID uint, companyID uint) error
+	DeleteNotification(id uint, userID uint) error
+	DeleteAllNotifications(userID uint, companyID uint) error
 	TriggerArticleCreatedNotification(companyID uint, creatorID uint, articleName string) error
 	TriggerEntityEventNotification(companyID uint, actorID uint, menuRoute string, action string, entityName string) error
 }
